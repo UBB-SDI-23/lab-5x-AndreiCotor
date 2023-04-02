@@ -8,9 +8,7 @@ import {faTrash, faPenToSquare} from "@fortawesome/free-solid-svg-icons";
 
 export default function ProblemsListBySuccessRate() {
     const [problemList, setProblemList] = useState<ProblemStatisticsDTO[]>([]);
-    const [state, updateState] = useState<any>();
     const navigate = useNavigate();
-    const forceUpdate = useCallback(() => updateState({}), []);
 
     useEffect(() => {
         ProblemsService.getProblemsBySuccessRate().then((res) => setProblemList(res.data))
@@ -18,7 +16,6 @@ export default function ProblemsListBySuccessRate() {
 
     const deleteProblem = async (id: string) => {
         await ProblemsService.deleteProblem(id);
-        forceUpdate();
     }
 
     const tableRows = problemList.map((el, index) => {
