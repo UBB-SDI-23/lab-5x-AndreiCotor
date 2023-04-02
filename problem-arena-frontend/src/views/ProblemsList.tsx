@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import {ProblemsService} from "../services/problems-service";
 import {Problem} from "../model/problem";
 import {useNavigate} from "react-router-dom";
