@@ -8,6 +8,7 @@ import NavBar from "./components/NavBar";
 import ProblemsList from "./views/ProblemsList";
 import ProblemView from "./views/ProblemView";
 import ProblemDetailsForm from "./views/ProblemDetailsForm";
+import ProblemsListBySuccessRate from "./views/ProblemListBySuccessRate";
 
 const router = createBrowserRouter([{
     path: '/',
@@ -24,6 +25,9 @@ const router = createBrowserRouter([{
 }, {
     path: '/problem/:id',
     element: <ProblemView />
+}, {
+    path: '/problems-by-success-rate',
+    element: <ProblemsListBySuccessRate/>
 }]);
 
 const root = ReactDOM.createRoot(
