@@ -27,3 +27,9 @@ pub struct NewProblem {
     pub(crate) statement: String,
     pub(crate) rating: i32
 }
+
+impl NewProblem {
+    pub fn is_valid(&self) -> bool {
+        0 <= self.rating && self.rating <= 5
+    }
+}

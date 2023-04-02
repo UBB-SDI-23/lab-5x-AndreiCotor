@@ -2,7 +2,7 @@ use std::cmp::Ordering::Equal;
 use std::collections::HashMap;
 use actix_web::{web, get, delete, put, post, HttpResponse};
 use actix_web::web::{Data, Json, Path};
-use crate::model::problem::Problem;
+use crate::model::problem::{NewProblem, Problem};
 use serde::{Deserialize};
 use crate::DbPool;
 use crate::model::dto::problem_dto::{ProblemByOtherSolvedProblemsDTO, ProblemDTO, ProblemStatisticsDTO};
@@ -24,7 +24,7 @@ pub fn problem_config(cfg: &mut web::ServiceConfig) {
 }
 
 #[post("/problem")]
-async fn add_problem(pool: Data<DbPool>, new_problem_json: Json<Problem>) -> HttpResponse {
+async fn add_problem(pool: Data<DbPool>, new_problem_json: Json<NewProblem>) -> HttpResponse {
     let new_problem = new_problem_json.into_inner();
     if !new_problem.is_valid() {
         return HttpResponse::BadRequest().finish();

@@ -7,6 +7,7 @@ import NavMenu from "./components/NavMenu";
 import NavBar from "./components/NavBar";
 import ProblemsList from "./views/ProblemsList";
 import ProblemView from "./views/ProblemView";
+import ProblemDetailsForm from "./views/ProblemDetailsForm";
 
 const router = createBrowserRouter([{
     path: '/',
@@ -14,6 +15,12 @@ const router = createBrowserRouter([{
 }, {
     path: '/problems',
     element: <ProblemsList />
+}, {
+    path: '/problem/create',
+    element: <ProblemDetailsForm />
+}, {
+    path: '/problem/edit/:id',
+    element: <ProblemDetailsForm />
 }, {
     path: '/problem/:id',
     element: <ProblemView />
@@ -28,7 +35,7 @@ root.render(
         <NavBar/>
         <div className="columns" style={{height: "100%"}}>
             <div className="column is-2" style={{height: "100%"}}><NavMenu/></div>
-            <div className="column box"><RouterProvider router={router}/></div>
+            <div className="column box mt-2"><RouterProvider router={router}/></div>
         </div>
     </React.StrictMode>
 );

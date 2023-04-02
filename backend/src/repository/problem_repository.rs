@@ -1,4 +1,4 @@
-use crate::model::problem::{Problem};
+use crate::model::problem::{NewProblem, Problem};
 use crate::model::submission::Submission;
 use crate::repository::{DbConn, DbError};
 use crate::utils::mock::Mockable;
@@ -24,7 +24,7 @@ pub fn get_problems_rating_larger(db: &mut Mockable<DbConn>, problem_rating: i32
     }
 }
 
-pub fn add_problem(db: &mut Mockable<DbConn>, problem: Problem) {
+pub fn add_problem(db: &mut Mockable<DbConn>, problem: NewProblem) {
     match db {
         Mockable::Real(inner) => real::add_problem(inner, problem),
         Mockable::Mock => panic!("Mock not implemented!")
@@ -77,15 +77,8 @@ mod real {
         Ok(problem_list)
     }
 
-    pub fn add_problem(db: &mut PgConnection, problem: Problem) {
-        let new_problem = NewProblem {
-            name: problem.name,
-            author: problem.author,
-            contest: problem.contest,
-            statement: problem.statement,
-            rating: problem.rating,
-        };
-        diesel::insert_into(problems).values(new_problem).execute(db).unwrap();
+    pub fn add_problem(db: &mut PgConnection, problem: NewProblem) {
+        diesel::insert_into(problems).values(problem).execute(db).unwrap();
     }
 
     pub fn delete_problem(db: &mut PgConnection, pid: i32) {
