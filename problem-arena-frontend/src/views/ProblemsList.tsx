@@ -8,14 +8,22 @@ import {faTrash, faPenToSquare} from "@fortawesome/free-solid-svg-icons";
 
 export default function ProblemsList() {
     const [problemList, setProblemList] = useState<Problem[]>([]);
+    const [value, setValue] = useState<number>(0);
     const navigate = useNavigate();
 
     useEffect(() => {
         ProblemsService.getProblems().then((res) => setProblemList(res.data))
-    }, []);
+    }, [value]);
+
+    function forceUpdate() {
+        setValue(value => value + 1);
+    }
 
     const deleteProblem = async (id: string) => {
-        await ProblemsService.deleteProblem(id);
+        if (window.confirm("Are you sure you want to delete this entry?")) {
+            await ProblemsService.deleteProblem(id);
+            forceUpdate();
+        }
     }
 
     const tableRows = problemList.map((el, index) => {
