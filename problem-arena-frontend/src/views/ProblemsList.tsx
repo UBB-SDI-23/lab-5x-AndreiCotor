@@ -26,6 +26,12 @@ export default function ProblemsList() {
         }
     }
 
+    function sortByRating() {
+        let x = JSON.parse(JSON.stringify(problemList));
+        x = x.sort((a: Problem, b: Problem) => a.rating - b.rating);
+        setProblemList(x);
+    }
+
     const tableRows = problemList.map((el, index) => {
         return (<tr key={index}>
             <td onClick={() => navigate("/problem/" + el.id)}>{index + 1}</td>
@@ -63,7 +69,7 @@ export default function ProblemsList() {
                         <th>Name</th>
                         <th>Author</th>
                         <th>Contest</th>
-                        <th>Rating</th>
+                        <th onClick={() => sortByRating()}>Rating</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
