@@ -23,7 +23,7 @@ def generate_problem(id: int, final):
     name = fake.word()
     author = fake.name()
     contest = fake.word()
-    statement = fake.paragraph(nb_sentences=1)
+    statement = fake.sentence(nb_words=3)
     rating = fake.random_int(1, 5)
     fo.write("(" + str(id) + ", \'" + name + "\', \'" + author + "\', \'" + contest + "\', \'" + statement + "\', " + str(rating) + ")")
     
@@ -62,7 +62,7 @@ def generate_user(id: int, final):
     fname = fake.first_name()
     lname = fake.last_name()
     school = fake.city() + " Highschool"
-    bio = fake.paragraph(nb_sentences=1)
+    bio = fake.sentence(nb_words=3)
     teacher = fake.name()
     fo.write("(" + str(id) + ", \'" + fname + "\', \'" + lname + "\', \'" + school + "\', \'" + bio + "\', \'" + teacher + "\')")
     
@@ -83,7 +83,7 @@ def generate_user_batch(start_id: int):
 def generate_submission(id: int, final):
     user_id = fake.random_int(1, 1000000)
     problem_id = fake.random_int(1, 1000000)
-    source_code = fake.paragraph(nb_sentences=1)
+    source_code = fake.sentence(nb_words=3)
     score = fake.random_int(0, 100)
     language = fake.random_element(elements=("C++", "Rust", "Python", "Java", "C#", "Pascal", "Haskell"))
     fo.write("(" + str(id) + ", " + str(user_id) + ", " + str(problem_id) + ", \'" + source_code + "\', " + str(score) + ", \'" + language + "\')")
@@ -101,7 +101,7 @@ def generate_submission_batch(start_id: int):
     fo.write(";\n")
     
 
-composed_key = {}
+composed_key = set()
 def generate_composed_key():
     while True:
         id1 = fake.random_int(1, 1000000)
