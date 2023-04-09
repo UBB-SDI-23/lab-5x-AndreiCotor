@@ -23,7 +23,7 @@ def generate_problem(id: int, final):
     name = fake.word()
     author = fake.name()
     contest = fake.word()
-    statement = fake.paragraph()
+    statement = fake.paragraph(nb_sentences=1)
     rating = fake.random_int(1, 5)
     fo.write("(" + str(id) + ", \'" + name + "\', \'" + author + "\', \'" + contest + "\', \'" + statement + "\', " + str(rating) + ")")
     
@@ -62,7 +62,7 @@ def generate_user(id: int, final):
     fname = fake.first_name()
     lname = fake.last_name()
     school = fake.city() + " Highschool"
-    bio = fake.paragraph()
+    bio = fake.paragraph(nb_sentences=1)
     teacher = fake.name()
     fo.write("(" + str(id) + ", \'" + fname + "\', \'" + lname + "\', \'" + school + "\', \'" + bio + "\', \'" + teacher + "\')")
     
@@ -83,7 +83,7 @@ def generate_user_batch(start_id: int):
 def generate_submission(id: int, final):
     user_id = fake.random_int(1, 1000000)
     problem_id = fake.random_int(1, 1000000)
-    source_code = fake.paragraph()
+    source_code = fake.paragraph(nb_sentences=1)
     score = fake.random_int(0, 100)
     language = fake.random_element(elements=("C++", "Rust", "Python", "Java", "C#", "Pascal", "Haskell"))
     fo.write("(" + str(id) + ", " + str(user_id) + ", " + str(problem_id) + ", \'" + source_code + "\', " + str(score) + ", \'" + language + "\')")
@@ -137,7 +137,8 @@ def generate():
         generate_problem_batch(i * BATCH_SIZE + 1)
         generate_contest_batch(i * BATCH_SIZE + 1)
         generate_user_batch(i * BATCH_SIZE + 1)
-        print(f"{i}/{NR_BATCHES_SIMPLE}")
+        if i % 25 == 0:
+            print(f"{i}/{NR_BATCHES_SIMPLE}")
     
     for i in range(NR_BATCHES_RELATION):
         generate_submission_batch(i * BATCH_SIZE + 1)
