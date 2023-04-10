@@ -40,17 +40,18 @@ def generate_problem_batch(start_id: int):
     fo.write(";\n")
     
     
-# contest: name
+# contest: name, description
 def generate_contest(id: int, final):
     name = fake.word()
-    fo.write("(" + str(id) + ", \'" + name + "\')")
+    description = '\\n'.join(fake.paragraphs(nb=3))
+    fo.write("(" + str(id) + ", \'" + name + "\', \'" + description + "\')")
     
     if not final:
         fo.write(",")
     
     
 def generate_contest_batch(start_id: int):
-    fo.write("INSERT INTO CONTEST (id, name) VALUES ")
+    fo.write("INSERT INTO CONTEST (id, name, description) VALUES ")
     for nr in range(BATCH_SIZE - 1):
         generate_contest(start_id + nr, False)
     generate_contest(start_id + BATCH_SIZE - 1, True)

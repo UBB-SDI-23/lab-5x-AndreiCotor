@@ -1,0 +1,1 @@
+ALTER TABLE Contest DROP COLUMN Description;
