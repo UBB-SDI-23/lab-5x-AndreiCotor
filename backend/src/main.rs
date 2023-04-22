@@ -44,6 +44,6 @@ async fn main() -> std::io::Result<()> {
             .configure(submission_config)
             .configure(contest_config)
             .configure(participates_config)
-    }).bind(("0.0.0.0", 80))?
+    }).bind(("0.0.0.0", 8000))?
         .run().await
 }
