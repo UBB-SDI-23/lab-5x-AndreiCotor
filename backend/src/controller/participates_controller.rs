@@ -1,6 +1,7 @@
 use actix_web::{HttpResponse, web, post, delete, put, get};
 use actix_web::web::{Data, Json, Path};
 use crate::DbPool;
+use crate::model::dto::pagination_dto::ParticipationPaginationDTO;
 use crate::model::participates::Participates;
 use crate::repository::participates_repository;
 
@@ -65,14 +66,17 @@ async fn update_participates(pool: Data<DbPool>, new_part: Json<Participates>) -
 }
 
 #[get("/api/participates")]
-async fn all_participates(pool: Data<DbPool>) -> HttpResponse {
+async fn all_participates(pool: Data<DbPool>, query: web::Query<ParticipationPaginationDTO>) -> HttpResponse {
     let participations = web::block(move || {
         let mut conn = pool.get().unwrap();
-        participates_repository::get_all_participation(&mut conn)
+        participates_repository::get_participation_paginated(&mut conn, query.into_inner())
     }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish());
 
     match participations {
-        Ok(v) => HttpResponse::Ok().json(v),
+        Ok(mut v) => {
+            v.sort_by(|a, b| (a.uid, a.cid).cmp(&(b.uid, b.cid)));
+            HttpResponse::Ok().json(v)
+        },
         Err(_) => HttpResponse::InternalServerError().finish()
     }
 }

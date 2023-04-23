@@ -1,4 +1,5 @@
 use diesel::prelude::*;
+use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::model::submission::{NewSubmission, Submission};
 use crate::repository::{DbConn, DbError};
 use crate::utils::mock::Mockable;
@@ -13,6 +14,13 @@ pub fn add_submission(db: &mut Mockable<DbConn>, submission: NewSubmission) {
 pub fn get_all_submissions(db: &mut Mockable<DbConn>) -> Result<Vec<Submission>, DbError> {
     match db {
         Mockable::Real(inner) => real::get_all_submissions(inner),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
+pub fn get_submissions_paginated(db: &mut Mockable<DbConn>, pagination: PaginationDTO) -> Result<Vec<Submission>, DbError> {
+    match db {
+        Mockable::Real(inner) => real::get_submissions_paginated(inner, pagination),
         Mockable::Mock => panic!("Mock not implemented!")
     }
 }
@@ -54,12 +62,29 @@ pub fn update_submission(db: &mut Mockable<DbConn>, sub: Submission) -> QueryRes
 
 mod real {
     use diesel::prelude::*;
+    use crate::model::dto::pagination_dto::PaginationDTO;
     use crate::model::submission::{NewSubmission, Submission};
     use crate::repository::DbError;
     use crate::schema::submissions::dsl::*;
 
     pub fn add_submission(db: &mut PgConnection, submission: NewSubmission) {
         diesel::insert_into(submissions).values(submission).execute(db).unwrap();
+    }
+
+    pub fn get_submissions_paginated(db: &mut PgConnection, pagination: PaginationDTO) -> Result<Vec<Submission>, DbError> {
+        let submission_list = if pagination.direction == 1 {
+            submissions.filter(id.gt(pagination.last_id))
+                .order(id.asc())
+                .limit(pagination.limit as i64)
+                .load(db)?
+        } else {
+            submissions.filter(id.lt(pagination.first_id))
+                .order(id.desc())
+                .limit(pagination.limit as i64)
+                .load(db)?
+        };
+
+        Ok(submission_list)
     }
 
     pub fn get_all_submissions(db: &mut PgConnection) -> Result<Vec<Submission>, DbError> {

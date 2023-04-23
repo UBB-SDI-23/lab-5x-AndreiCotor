@@ -1,4 +1,5 @@
 use diesel::prelude::*;
+use crate::model::dto::pagination_dto::ParticipationPaginationDTO;
 use crate::model::participates::Participates;
 use crate::repository::{DbConn, DbError};
 use crate::utils::mock::Mockable;
@@ -6,6 +7,13 @@ use crate::utils::mock::Mockable;
 pub fn get_all_participation(db: &mut Mockable<DbConn>) -> Result<Vec<Participates>, DbError> {
     match db {
         Mockable::Real(inner) => real::get_all_participation(inner),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
+pub fn get_participation_paginated(db: &mut Mockable<DbConn>, pagination: ParticipationPaginationDTO) -> Result<Vec<Participates>, DbError> {
+    match db {
+        Mockable::Real(inner) => real::get_participation_paginated(inner, pagination),
         Mockable::Mock => panic!("Mock not implemented!")
     }
 }
@@ -47,6 +55,7 @@ pub fn update_participation(db: &mut Mockable<DbConn>, part: Participates) -> Qu
 
 mod real {
     use diesel::prelude::*;
+    use crate::model::dto::pagination_dto::ParticipationPaginationDTO;
     use crate::model::participates::Participates;
     use crate::repository::DbError;
     use crate::schema::participates::dsl::*;
@@ -54,6 +63,22 @@ mod real {
     pub fn get_all_participation(db: &mut PgConnection) -> Result<Vec<Participates>, DbError> {
         let participation_list = participates.load(db)?;
         Ok(participation_list)
+    }
+
+    pub fn get_participation_paginated(db: &mut PgConnection, pagination: ParticipationPaginationDTO) -> Result<Vec<Participates>, DbError> {
+        let participates_list = if pagination.direction == 1 {
+            participates.filter(uid.gt(pagination.last_uid).or(uid.eq(pagination.last_uid).and(cid.gt(pagination.last_cid))))
+                .order((uid.asc(), cid.asc()))
+                .limit(pagination.limit as i64)
+                .load(db)?
+        } else {
+            participates.filter(uid.lt(pagination.first_uid).or(uid.eq(pagination.first_uid).and(cid.lt(pagination.first_cid))))
+                .order((uid.desc(), cid.desc()))
+                .limit(pagination.limit as i64)
+                .load(db)?
+        };
+
+        Ok(participates_list)
     }
 
     pub fn get_participation_by_ids(db: &mut PgConnection, usid: i32, coid: i32) -> Result<Option<Participates>, DbError> {

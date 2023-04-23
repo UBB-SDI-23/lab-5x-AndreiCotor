@@ -1,6 +1,7 @@
 use actix_web::{HttpResponse, web, post, get, delete, put};
 use actix_web::web::{Data, Json, Path};
 use crate::DbPool;
+use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::model::dto::submission_dto::{SubmissionDTO, SubmissionReportDTO};
 use crate::model::submission::{NewSubmission, Submission};
 use crate::repository::{problem_repository, submission_repository, users_repo};
@@ -29,11 +30,13 @@ async fn add_submission(pool: Data<DbPool>, new_submission_json: Json<NewSubmiss
 }
 
 #[get("/api/submission")]
-async fn all_submissions(pool: Data<DbPool>) -> HttpResponse {
-    let submissions = web::block(move || {
+async fn all_submissions(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> HttpResponse {
+    let mut submissions = web::block(move || {
         let mut conn = pool.get().unwrap();
-        submission_repository::get_all_submissions(&mut conn)
+        submission_repository::get_submissions_paginated(&mut conn, query.into_inner())
     }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
+
+    submissions.sort_by(|a, b| a.id.cmp(&b.id));
 
     HttpResponse::Ok().json(submissions)
 }

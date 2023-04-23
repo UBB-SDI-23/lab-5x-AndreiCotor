@@ -12,7 +12,6 @@ export default function ProblemsList() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        console.log(pagination);
         ProblemsService.getProblems(pagination).then((res) => {
             if (res.data.length > 0) {
                 setProblemList(res.data);

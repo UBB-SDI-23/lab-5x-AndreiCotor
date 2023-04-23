@@ -1,6 +1,14 @@
 use crate::model::contest::{NewContest, Contest};
+use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::repository::{DbConn, DbError};
 use crate::utils::mock::Mockable;
+
+pub fn get_contests_paginated(db: &mut Mockable<DbConn>, pagination: PaginationDTO) -> Result<Vec<Contest>, DbError> {
+    match db {
+        Mockable::Real(inner) => real::get_contests_paginated(inner, pagination),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
 
 pub fn get_all_contests(db: &mut Mockable<DbConn>) -> Result<Vec<Contest>, DbError> {
     match db {
@@ -40,8 +48,25 @@ pub fn update_contest(db: &mut Mockable<DbConn>, con: Contest) {
 mod real {
     use diesel::prelude::*;
     use crate::model::contest::{Contest, NewContest};
+    use crate::model::dto::pagination_dto::PaginationDTO;
     use crate::repository::DbError;
     use crate::schema::contest::dsl::*;
+
+    pub fn get_contests_paginated(db: &mut PgConnection, pagination: PaginationDTO) -> Result<Vec<Contest>, DbError> {
+        let contest_list = if pagination.direction == 1 {
+            contest.filter(id.gt(pagination.last_id))
+                .order(id.asc())
+                .limit(pagination.limit as i64)
+                .load(db)?
+        } else {
+            contest.filter(id.lt(pagination.first_id))
+                .order(id.desc())
+                .limit(pagination.limit as i64)
+                .load(db)?
+        };
+
+        Ok(contest_list)
+    }
 
     pub fn get_all_contests(db: &mut PgConnection) -> Result<Vec<Contest>, DbError> {
         let contest_list = contest.load(db)?;

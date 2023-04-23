@@ -1,3 +1,4 @@
+use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::model::user::{User};
 use crate::repository::{DbConn, DbError};
 use crate::model::participates::Participates;
@@ -7,6 +8,13 @@ use crate::utils::mock::Mockable;
 pub fn get_all_users(db: &mut Mockable<DbConn>) -> Result<Vec<User>, DbError> {
     match db {
         Mockable::Real(inner) => real::get_all_users(inner),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
+pub fn get_users_paginated(db: &mut Mockable<DbConn>, pagination: PaginationDTO) -> Result<Vec<User>, DbError> {
+    match db {
+        Mockable::Real(inner) => real::get_users_paginated(inner, pagination),
         Mockable::Mock => panic!("Mock not implemented!")
     }
 }
@@ -55,6 +63,7 @@ pub fn get_all_users_with_submissions(db: &mut Mockable<DbConn>) -> Result<Vec<(
 
 mod real {
     use diesel::prelude::*;
+    use crate::model::dto::pagination_dto::PaginationDTO;
     use crate::model::participates::Participates;
     use crate::model::submission::Submission;
     use crate::model::user::{NewUser, User};
@@ -64,6 +73,22 @@ mod real {
     pub fn get_all_users(db: &mut PgConnection) -> Result<Vec<User>, DbError> {
         let user_list = users.load(db)?;
         Ok(user_list)
+    }
+
+    pub fn get_users_paginated(db: &mut PgConnection, pagination: PaginationDTO) -> Result<Vec<User>, DbError> {
+        let users_list = if pagination.direction == 1 {
+            users.filter(id.gt(pagination.last_id))
+                .order(id.asc())
+                .limit(pagination.limit as i64)
+                .load(db)?
+        } else {
+            users.filter(id.lt(pagination.first_id))
+                .order(id.desc())
+                .limit(pagination.limit as i64)
+                .load(db)?
+        };
+
+        Ok(users_list)
     }
 
     pub fn get_user_by_id(db: &mut PgConnection, uid: i32) -> Result<Option<User>, DbError> {

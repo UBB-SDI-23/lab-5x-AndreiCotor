@@ -9,6 +9,10 @@ import ProblemsList from "./views/ProblemsList";
 import ProblemView from "./views/ProblemView";
 import ProblemDetailsForm from "./views/ProblemDetailsForm";
 import ProblemsListBySuccessRate from "./views/ProblemListBySuccessRate";
+import ContestList from "./views/ContestList";
+import UserList from "./views/UserList";
+import SubmissionList from "./views/SubmissionList";
+import ParticipationList from "./views/ParticipationList";
 
 const router = createBrowserRouter([{
     path: '/',
@@ -28,6 +32,18 @@ const router = createBrowserRouter([{
 }, {
     path: '/problems-by-success-rate',
     element: <ProblemsListBySuccessRate/>
+}, {
+    path: '/contests',
+    element: <ContestList />
+}, {
+    path: '/users',
+    element: <UserList />
+}, {
+    path: '/submissions',
+    element: <SubmissionList/>
+}, {
+    path: '/participations',
+    element: <ParticipationList/>
 }]);
 
 const root = ReactDOM.createRoot(

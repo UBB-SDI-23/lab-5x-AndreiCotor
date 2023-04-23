@@ -1,6 +1,7 @@
 use actix_web::{HttpResponse, web, get, delete, put, post};
 use actix_web::web::{Data, Json, Path};
 use crate::DbPool;
+use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::model::dto::user_dto::{UserDTO, UserReportDTO};
 use crate::model::user::User;
 use crate::repository::{submission_repository, users_repo};
@@ -44,11 +45,13 @@ async fn update_user(pool: Data<DbPool>, new_problem: Json<User>) -> HttpRespons
 }
 
 #[get("/api/user")]
-async fn all_users(pool: Data<DbPool>) -> HttpResponse {
-    let users = web::block(move || {
+async fn all_users(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> HttpResponse {
+    let mut users = web::block(move || {
         let mut conn = pool.get().unwrap();
-        users_repo::get_all_users(&mut conn)
+        users_repo::get_users_paginated(&mut conn, query.into_inner())
     }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
+
+    users.sort_by(|a, b| a.id.cmp(&b.id));
 
     HttpResponse::Ok().json(users)
 }

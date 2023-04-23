@@ -2,6 +2,7 @@ use actix_web::{HttpResponse, web, post, delete, put, get};
 use actix_web::web::{Data, Json, Path};
 use crate::DbPool;
 use crate::model::contest::{Contest, NewContest};
+use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::repository::contest_repository;
 
 pub fn contest_config(cfg: &mut web::ServiceConfig) {
@@ -42,11 +43,13 @@ async fn update_contest(pool: Data<DbPool>, new_contest: Json<Contest>) -> HttpR
 }
 
 #[get("/api/contest")]
-async fn all_contests(pool: Data<DbPool>) -> HttpResponse {
-    let contests = web::block(move || {
+async fn all_contests(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> HttpResponse {
+    let mut contests = web::block(move || {
         let mut conn = pool.get().unwrap();
-        contest_repository::get_all_contests(&mut conn)
+        contest_repository::get_contests_paginated(&mut conn, query.into_inner())
     }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
+
+    contests.sort_by(|a, b| a.id.cmp(&b.id));
 
     HttpResponse::Ok().json(contests)
 }

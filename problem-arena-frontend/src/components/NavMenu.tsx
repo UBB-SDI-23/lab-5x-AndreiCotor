@@ -9,8 +9,10 @@ export default function NavMenu() {
                     <li><a href="/problems">All problems</a></li>
                     <li><a href="/problems-by-success-rate">Problems by success rate</a></li>
                 </ul></li>
-                <li><a href="/contests">Contests</a></li>
-                <li><a href="/submissions">Evaluator</a></li>
+                <li><a href="/contests">Training Contests</a></li>
+                <li><a href="/submissions">Submissions</a></li>
+                <li><a href="/users">Users</a></li>
+                <li><a href="/participations">Participations</a></li>
             </ul>
         </aside>
     );
