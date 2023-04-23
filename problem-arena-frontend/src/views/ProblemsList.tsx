@@ -18,7 +18,7 @@ export default function ProblemsList() {
                 setProblemList(res.data);
             }
         })
-    }, [value]);
+    }, [value, pagination]);
 
     function forceUpdate() {
         setValue(value => value + 1);
@@ -35,14 +35,12 @@ export default function ProblemsList() {
         if (problemList.length > 0) {
             setPagination({first_id: problemList[0].id, last_id: problemList[problemList.length - 1].id, limit: 10, direction: -1});
         }
-        forceUpdate();
     }
 
     const nextPage = () => {
         if (problemList.length > 0) {
             setPagination({first_id: problemList[0].id, last_id: problemList[problemList.length - 1].id, limit: 10, direction: 1});
         }
-        forceUpdate();
     }
 
     /*function sortByRating() {
