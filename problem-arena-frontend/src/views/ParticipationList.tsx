@@ -13,7 +13,7 @@ export default function ParticipationList() {
         first_cid: -1,
         last_uid: 0,
         last_cid: 0,
-        limit: 2,
+        limit: 10,
         direction: 1
     });
     const navigate = useNavigate();
@@ -44,7 +44,7 @@ export default function ParticipationList() {
                 first_cid: participationList[0].cid,
                 last_uid: participationList[participationList.length - 1].uid,
                 last_cid: participationList[participationList.length - 1].cid,
-                limit: 2,
+                limit: 10,
                 direction: -1
             });
         }
@@ -56,7 +56,7 @@ export default function ParticipationList() {
                 first_cid: participationList[0].cid,
                 last_uid: participationList[participationList.length - 1].uid,
                 last_cid: participationList[participationList.length - 1].cid,
-                limit: 2,
+                limit: 10,
                 direction: 1
             });
         }

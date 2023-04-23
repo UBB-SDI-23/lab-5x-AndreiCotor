@@ -1,9 +1,10 @@
 use actix_web::{HttpResponse, web, get, delete, put, post};
 use actix_web::web::{Data, Json, Path};
+use serde::Deserialize;
 use crate::DbPool;
 use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::model::dto::user_dto::{UserDTO, UserReportDTO};
-use crate::model::user::User;
+use crate::model::user::{NewUser, User};
 use crate::repository::{submission_repository, users_repo};
 
 pub fn user_config(cfg: &mut web::ServiceConfig) {
@@ -11,12 +12,18 @@ pub fn user_config(cfg: &mut web::ServiceConfig) {
         .service(delete_user)
         .service(update_user)
         .service(all_users)
+        .service(get_users_autocomplete)
         .service(get_user_by_id)
         .service(get_users_by_number_of_participations);
 }
 
+#[derive(Deserialize)]
+struct Autocomplete {
+    lname: Option<String>
+}
+
 #[post("/api/user")]
-async fn add_user(pool: Data<DbPool>, new_user: Json<User>) -> HttpResponse {
+async fn add_user(pool: Data<DbPool>, new_user: Json<NewUser>) -> HttpResponse {
     web::block(move || {
         let mut conn = pool.get().unwrap();
         users_repo::add_user(&mut conn, new_user.into_inner());
@@ -52,6 +59,16 @@ async fn all_users(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> Http
     }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
 
     users.sort_by(|a, b| a.id.cmp(&b.id));
+
+    HttpResponse::Ok().json(users)
+}
+
+#[get("/api/user/autocomplete")]
+async fn get_users_autocomplete(pool: Data<DbPool>, path: web::Query<Autocomplete>) -> HttpResponse {
+    let mut users = web::block(move || {
+        let mut conn = pool.get().unwrap();
+        users_repo::get_users_by_last_name(&mut conn, path.into_inner().lname)
+    }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
 
     HttpResponse::Ok().json(users)
 }

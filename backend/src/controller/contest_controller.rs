@@ -1,5 +1,6 @@
 use actix_web::{HttpResponse, web, post, delete, put, get};
 use actix_web::web::{Data, Json, Path};
+use serde::Deserialize;
 use crate::DbPool;
 use crate::model::contest::{Contest, NewContest};
 use crate::model::dto::pagination_dto::PaginationDTO;
@@ -9,8 +10,14 @@ pub fn contest_config(cfg: &mut web::ServiceConfig) {
     cfg.service(add_contest)
         .service(delete_contest)
         .service(update_contest)
+        .service(get_contest_autocomplete)
         .service(all_contests)
         .service(get_contest_by_id);
+}
+
+#[derive(Deserialize)]
+struct Autocomplete {
+    name: Option<String>
 }
 
 #[post("/api/contest")]
@@ -50,6 +57,16 @@ async fn all_contests(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> H
     }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
 
     contests.sort_by(|a, b| a.id.cmp(&b.id));
+
+    HttpResponse::Ok().json(contests)
+}
+
+#[get("/api/contest/autocomplete")]
+async fn get_contest_autocomplete(pool: Data<DbPool>, query: web::Query<Autocomplete>) -> HttpResponse {
+    let mut contests = web::block(move || {
+        let mut conn = pool.get().unwrap();
+        contest_repository::get_contests_by_name(&mut conn, query.into_inner().name)
+    }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
 
     HttpResponse::Ok().json(contests)
 }

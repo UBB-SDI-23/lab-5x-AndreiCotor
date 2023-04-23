@@ -1,5 +1,5 @@
 use crate::model::dto::pagination_dto::PaginationDTO;
-use crate::model::user::{User};
+use crate::model::user::{NewUser, User};
 use crate::repository::{DbConn, DbError};
 use crate::model::participates::Participates;
 use crate::model::submission::Submission;
@@ -19,6 +19,13 @@ pub fn get_users_paginated(db: &mut Mockable<DbConn>, pagination: PaginationDTO)
     }
 }
 
+pub fn get_users_by_last_name(db: &mut Mockable<DbConn>, lname: Option<String>) -> Result<Vec<User>, DbError> {
+    match db {
+        Mockable::Real(inner) => real::get_users_by_last_name(inner, lname),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
 pub fn get_user_by_id(db: &mut Mockable<DbConn>, uid: i32) -> Result<Option<User>, DbError> {
     match db {
         Mockable::Real(inner) => real::get_user_by_id(inner, uid),
@@ -26,7 +33,7 @@ pub fn get_user_by_id(db: &mut Mockable<DbConn>, uid: i32) -> Result<Option<User
     }
 }
 
-pub fn add_user(db: &mut Mockable<DbConn>, user: User) {
+pub fn add_user(db: &mut Mockable<DbConn>, user: NewUser) {
     match db {
         Mockable::Real(inner) => real::add_user(inner, user),
         Mockable::Mock => panic!("Mock not implemented!")
@@ -91,6 +98,15 @@ mod real {
         Ok(users_list)
     }
 
+    pub fn get_users_by_last_name(db: &mut PgConnection, lname: Option<String>) -> Result<Vec<User>, DbError> {
+        let users_list = match lname {
+            Some(v) => users.filter(last_name.like(format!("{}%", v)))
+                .limit(10).load(db) ?,
+            None => users.limit(10).load(db)?
+        };
+        Ok(users_list)
+    }
+
     pub fn get_user_by_id(db: &mut PgConnection, uid: i32) -> Result<Option<User>, DbError> {
         let user = users.filter(id.eq(uid))
             .first::<User>(db)
@@ -99,15 +115,8 @@ mod real {
         Ok(user)
     }
 
-    pub fn add_user(db: &mut PgConnection, user: User) {
-        let new_user = NewUser {
-            first_name: user.first_name,
-            last_name: user.last_name,
-            school: user.school,
-            bio: user.bio,
-            teacher: user.teacher
-        };
-        diesel::insert_into(users).values(new_user).execute(db).unwrap();
+    pub fn add_user(db: &mut PgConnection, user: NewUser) {
+        diesel::insert_into(users).values(user).execute(db).unwrap();
     }
 
     pub fn delete_user(db: &mut PgConnection, uid: i32) {

@@ -17,7 +17,7 @@ export const ParticipationService = {
     },
 
     addParticipation: (participation: Participation): Promise<AxiosResponse> => {
-        return axiosConfigured.post("/participates", participation);
+        return axiosConfigured.post("/participates", [participation]);
     },
 
     deleteParticipation: (id: string): Promise<AxiosResponse> => {

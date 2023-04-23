@@ -14,11 +14,17 @@ pub struct RatingQuery {
     rating: Option<i32>
 }
 
+#[derive(Deserialize)]
+struct Autocomplete {
+    name: Option<String>
+}
+
 pub fn problem_config(cfg: &mut web::ServiceConfig) {
     cfg.service(add_problem)
         .service(delete_problem)
         .service(update_problem)
         .service(all_problems)
+        .service(get_problems_autocomplete)
         .service(get_problems_by_success_rate)
         .service(get_problem_by_id)
         .service(get_problem_number_of_other_problems_solved_by_its_solvers);
@@ -84,6 +90,16 @@ async fn all_problems(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> H
     }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
 
     problems.sort_by(|a, b| a.id.cmp(&b.id));
+
+    HttpResponse::Ok().json(problems)
+}
+
+#[get("/api/problem/autocomplete")]
+async fn get_problems_autocomplete(pool: Data<DbPool>, query: web::Query<Autocomplete>) -> HttpResponse {
+    let mut problems = web::block(move || {
+        let mut conn = pool.get().unwrap();
+        problem_repository::get_problem_by_name(&mut conn, query.into_inner().name)
+    }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
 
     HttpResponse::Ok().json(problems)
 }

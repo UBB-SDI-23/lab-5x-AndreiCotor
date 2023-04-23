@@ -22,5 +22,9 @@ export const UserService = {
 
     deleteUser: (id: string): Promise<AxiosResponse> => {
         return axiosConfigured.delete("/user/" + id);
+    },
+
+    getUsersAutocomplete: (last_name: string): Promise<AxiosResponse<User[]>> => {
+        return axiosConfigured.get("/user/autocomplete", {params: {lname: last_name}})
     }
 }

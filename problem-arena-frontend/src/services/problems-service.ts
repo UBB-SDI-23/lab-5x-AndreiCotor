@@ -26,5 +26,9 @@ export const ProblemsService = {
 
     getProblemsBySuccessRate: (): Promise<AxiosResponse<ProblemStatisticsDTO[]>> => {
         return axiosConfigured.get("/problem-by-success-rate");
+    },
+
+    getProblemsAutocomplete: (name: string): Promise<AxiosResponse<Problem[]>> => {
+        return axiosConfigured.get("/problem/autocomplete", {params: {name}})
     }
 }

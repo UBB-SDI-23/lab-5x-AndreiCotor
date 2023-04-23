@@ -18,6 +18,13 @@ pub fn get_all_problems(db: &mut Mockable<DbConn>) -> Result<Vec<Problem>, DbErr
     }
 }
 
+pub fn get_problem_by_name(db: &mut Mockable<DbConn>, pname: Option<String>) -> Result<Vec<Problem>, DbError> {
+    match db {
+        Mockable::Real(inner) => real::get_problem_by_name(inner, pname),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
 pub fn get_problem_by_id(db: &mut Mockable<DbConn>, uid: i32) -> Result<Option<Problem>, DbError> {
     match db {
         Mockable::Real(inner) => real::get_problem_by_id(inner, uid),
@@ -86,6 +93,15 @@ mod real {
 
     pub fn get_all_problems(db: &mut PgConnection) -> Result<Vec<Problem>, DbError> {
         let problem_list = problems.load(db)?;
+        Ok(problem_list)
+    }
+
+    pub fn get_problem_by_name(db: &mut PgConnection, pname: Option<String>) -> Result<Vec<Problem>, DbError> {
+        let problem_list = match pname {
+            Some(v) => problems.filter(name.like(format!("{}%", v)))
+                .limit(10).load(db) ?,
+            None => problems.limit(10).load(db)?
+        };
         Ok(problem_list)
     }
 

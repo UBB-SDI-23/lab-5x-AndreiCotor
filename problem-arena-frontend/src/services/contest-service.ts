@@ -22,5 +22,9 @@ export const ContestService = {
 
     deleteContest: (id: string): Promise<AxiosResponse> => {
         return axiosConfigured.delete("/contest/" + id);
+    },
+
+    getContestAutocomplete: (name: string): Promise<AxiosResponse<Contest[]>> => {
+        return axiosConfigured.get("/contest/autocomplete", {params: {name}})
     }
 }

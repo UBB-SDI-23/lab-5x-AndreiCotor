@@ -17,6 +17,13 @@ pub fn get_all_contests(db: &mut Mockable<DbConn>) -> Result<Vec<Contest>, DbErr
     }
 }
 
+pub fn get_contests_by_name(db: &mut Mockable<DbConn>, cname: Option<String>) -> Result<Vec<Contest>, DbError> {
+    match db {
+        Mockable::Real(inner) => real::get_contests_by_name(inner, cname),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
 pub fn get_contest_by_id(db: &mut Mockable<DbConn>, uid: i32) -> Result<Option<Contest>, DbError> {
     match db {
         Mockable::Real(inner) => real::get_contest_by_id(inner, uid),
@@ -70,6 +77,15 @@ mod real {
 
     pub fn get_all_contests(db: &mut PgConnection) -> Result<Vec<Contest>, DbError> {
         let contest_list = contest.load(db)?;
+        Ok(contest_list)
+    }
+
+    pub fn get_contests_by_name(db: &mut PgConnection, cname: Option<String>) -> Result<Vec<Contest>, DbError> {
+        let contest_list = match cname {
+            Some(v) => contest.filter(name.like(format!("{}%", v)))
+                .limit(10).load(db) ?,
+            None => contest.limit(10).load(db)?
+        };
         Ok(contest_list)
     }
 
