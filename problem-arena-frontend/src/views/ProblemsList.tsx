@@ -3,14 +3,21 @@ import {ProblemsService} from "../services/problems-service";
 import {Problem} from "../model/problem";
 import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
+import {PaginationDTO} from "../model/PaginationDTO";
 
 export default function ProblemsList() {
     const [problemList, setProblemList] = useState<Problem[]>([]);
     const [value, setValue] = useState<number>(0);
+    const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
     const navigate = useNavigate();
 
     useEffect(() => {
-        ProblemsService.getProblems().then((res) => setProblemList(res.data))
+        console.log(pagination);
+        ProblemsService.getProblems(pagination).then((res) => {
+            if (res.data.length > 0) {
+                setProblemList(res.data);
+            }
+        })
     }, [value]);
 
     function forceUpdate() {
@@ -24,6 +31,20 @@ export default function ProblemsList() {
         }
     }
 
+    const previousPage = () => {
+        if (problemList.length > 0) {
+            setPagination({first_id: problemList[0].id, last_id: problemList[problemList.length - 1].id, limit: 10, direction: -1});
+        }
+        forceUpdate();
+    }
+
+    const nextPage = () => {
+        if (problemList.length > 0) {
+            setPagination({first_id: problemList[0].id, last_id: problemList[problemList.length - 1].id, limit: 10, direction: 1});
+        }
+        forceUpdate();
+    }
+
     /*function sortByRating() {
         let x = JSON.parse(JSON.stringify(problemList));
         x = x.sort((a: Problem, b: Problem) => a.rating - b.rating);
@@ -31,13 +52,13 @@ export default function ProblemsList() {
     }*/
 
     return (
-        <div>
+        <div className="mr-2">
             <div className="columns">
                 <div className="column">
                     <h1 className="title">Problem List</h1>
                 </div>
                 <div className="column">
-                    <button className="button is-pulled-right mr-2 is-link" onClick={() => navigate("/problem/create")}>
+                    <button className="button is-pulled-right is-link" onClick={() => navigate("/problem/create")}>
                         Add Problem
                     </button>
                 </div>
@@ -48,6 +69,10 @@ export default function ProblemsList() {
                    path={"/problem"}
                    deleteFunction={(id) => deleteProblem(id)}
             />
+            <nav className="pagination" role="navigation" aria-label="pagination">
+                <button className="pagination-previous" onClick={() => previousPage()}>Previous</button>
+                <button className="pagination-next" onClick={() => nextPage()}>Next page</button>
+            </nav>
         </div>
     );
 }

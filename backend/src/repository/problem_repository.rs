@@ -1,7 +1,15 @@
+use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::model::problem::{NewProblem, Problem};
 use crate::model::submission::Submission;
 use crate::repository::{DbConn, DbError};
 use crate::utils::mock::Mockable;
+
+pub fn get_problems_paginated(db: &mut Mockable<DbConn>, pagination: PaginationDTO) -> Result<Vec<Problem>, DbError> {
+    match db {
+        Mockable::Real(inner) => real::get_problems_paginated(inner, pagination),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
 
 pub fn get_all_problems(db: &mut Mockable<DbConn>) -> Result<Vec<Problem>, DbError> {
     match db {
@@ -54,10 +62,27 @@ pub fn get_problems_with_submissions(db: &mut Mockable<DbConn>) -> Result<Vec<(P
 
 mod real {
     use diesel::prelude::*;
+    use crate::model::dto::pagination_dto::PaginationDTO;
     use crate::model::problem::{NewProblem, Problem};
     use crate::model::submission::Submission;
     use crate::repository::DbError;
     use crate::schema::problems::dsl::*;
+
+    pub fn get_problems_paginated(db: &mut PgConnection, pagination: PaginationDTO) -> Result<Vec<Problem>, DbError> {
+        let problem_list = if pagination.direction == 1 {
+            problems.filter(id.gt(pagination.last_id))
+                .order(id.asc())
+                .limit(pagination.limit as i64)
+                .load(db)?
+        } else {
+            problems.filter(id.lt(pagination.first_id))
+                .order(id.desc())
+                .limit(pagination.limit as i64)
+                .load(db)?
+        };
+
+        Ok(problem_list)
+    }
 
     pub fn get_all_problems(db: &mut PgConnection) -> Result<Vec<Problem>, DbError> {
         let problem_list = problems.load(db)?;

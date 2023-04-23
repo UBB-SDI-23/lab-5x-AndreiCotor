@@ -1,10 +1,11 @@
 import {axiosConfigured} from "../config";
 import {AxiosResponse} from "axios";
 import {NewProblem, Problem, ProblemStatisticsDTO} from "../model/problem";
+import {PaginationDTO} from "../model/PaginationDTO";
 
 export const ProblemsService = {
-    getProblems: (): Promise<AxiosResponse<Problem[]>> => {
-        return axiosConfigured.get("/problem");
+    getProblems: (pagination: PaginationDTO): Promise<AxiosResponse<Problem[]>> => {
+        return axiosConfigured.get("/problem", {params: pagination});
     },
 
     getProblem: (id: string): Promise<AxiosResponse<Problem>> => {

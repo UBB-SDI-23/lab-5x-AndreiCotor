@@ -14,7 +14,7 @@ pub fn user_config(cfg: &mut web::ServiceConfig) {
         .service(get_users_by_number_of_participations);
 }
 
-#[post("/user")]
+#[post("/api/user")]
 async fn add_user(pool: Data<DbPool>, new_user: Json<User>) -> HttpResponse {
     web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -23,7 +23,7 @@ async fn add_user(pool: Data<DbPool>, new_user: Json<User>) -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
-#[delete("/user/{id}")]
+#[delete("/api/user/{id}")]
 async fn delete_user(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
     web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -33,7 +33,7 @@ async fn delete_user(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
-#[put("/user")]
+#[put("/api/user")]
 async fn update_user(pool: Data<DbPool>, new_problem: Json<User>) -> HttpResponse {
     web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -43,7 +43,7 @@ async fn update_user(pool: Data<DbPool>, new_problem: Json<User>) -> HttpRespons
     HttpResponse::Ok().finish()
 }
 
-#[get("/user")]
+#[get("/api/user")]
 async fn all_users(pool: Data<DbPool>) -> HttpResponse {
     let users = web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -53,7 +53,7 @@ async fn all_users(pool: Data<DbPool>) -> HttpResponse {
     HttpResponse::Ok().json(users)
 }
 
-#[get("/user/{id}")]
+#[get("/api/user/{id}")]
 async fn get_user_by_id(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
     let id = path.into_inner();
 
@@ -70,7 +70,7 @@ async fn get_user_by_id(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
     HttpResponse::Ok().json(user)
 }
 
-#[get("/user-by-number-of-participations")]
+#[get("/api/user-by-number-of-participations")]
 async fn get_users_by_number_of_participations(pool: Data<DbPool>) -> HttpResponse {
     let mut users = web::block(move || {
         let mut conn = pool.get().unwrap();

@@ -12,7 +12,7 @@ pub fn contest_config(cfg: &mut web::ServiceConfig) {
         .service(get_contest_by_id);
 }
 
-#[post("/contest")]
+#[post("/api/contest")]
 async fn add_contest(pool: Data<DbPool>, new_contest: Json<NewContest>) -> HttpResponse {
     web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -21,7 +21,7 @@ async fn add_contest(pool: Data<DbPool>, new_contest: Json<NewContest>) -> HttpR
     HttpResponse::Ok().finish()
 }
 
-#[delete("/contest/{id}")]
+#[delete("/api/contest/{id}")]
 async fn delete_contest(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
     web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -31,7 +31,7 @@ async fn delete_contest(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
-#[put("/contest")]
+#[put("/api/contest")]
 async fn update_contest(pool: Data<DbPool>, new_contest: Json<Contest>) -> HttpResponse {
     web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -41,7 +41,7 @@ async fn update_contest(pool: Data<DbPool>, new_contest: Json<Contest>) -> HttpR
     HttpResponse::Ok().finish()
 }
 
-#[get("/contest")]
+#[get("/api/contest")]
 async fn all_contests(pool: Data<DbPool>) -> HttpResponse {
     let contests = web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -51,7 +51,7 @@ async fn all_contests(pool: Data<DbPool>) -> HttpResponse {
     HttpResponse::Ok().json(contests)
 }
 
-#[get("/contest/{id}")]
+#[get("/api/contest/{id}")]
 async fn get_contest_by_id(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
     let id = path.into_inner();
 

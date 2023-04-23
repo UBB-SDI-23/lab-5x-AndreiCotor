@@ -12,7 +12,7 @@ pub fn participates_config(cfg: &mut web::ServiceConfig) {
         .service(get_participates_by_id);
 }
 
-#[post("/participates")]
+#[post("/api/participates")]
 async fn add_participates(pool: Data<DbPool>, participates_json: Json<Vec<Participates>>) -> HttpResponse {
     let participates_list = participates_json.into_inner();
     for participates in &participates_list {
@@ -32,7 +32,7 @@ async fn add_participates(pool: Data<DbPool>, participates_json: Json<Vec<Partic
     }
 }
 
-#[delete("/participates/{id1}/{id2}")]
+#[delete("/api/participates/{id1}/{id2}")]
 async fn delete_participates(pool: Data<DbPool>, path: Path<(i32, i32)>) -> HttpResponse {
     let id = path.into_inner();
     let val = web::block(move || {
@@ -46,7 +46,7 @@ async fn delete_participates(pool: Data<DbPool>, path: Path<(i32, i32)>) -> Http
     }
 }
 
-#[put("/participates")]
+#[put("/api/participates")]
 async fn update_participates(pool: Data<DbPool>, new_part: Json<Participates>) -> HttpResponse {
     let participates = new_part.into_inner();
     if !participates.is_valid() {
@@ -64,7 +64,7 @@ async fn update_participates(pool: Data<DbPool>, new_part: Json<Participates>) -
     }
 }
 
-#[get("/participates")]
+#[get("/api/participates")]
 async fn all_participates(pool: Data<DbPool>) -> HttpResponse {
     let participations = web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -77,7 +77,7 @@ async fn all_participates(pool: Data<DbPool>) -> HttpResponse {
     }
 }
 
-#[get("/participates/{id1}/{id2}")]
+#[get("/api/participates/{id1}/{id2}")]
 async fn get_participates_by_id(pool: Data<DbPool>, path: Path<(i32, i32)>) -> HttpResponse {
     let id = path.into_inner();
 

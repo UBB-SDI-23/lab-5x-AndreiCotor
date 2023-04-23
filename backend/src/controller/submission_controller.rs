@@ -14,7 +14,7 @@ pub fn submission_config(cfg: &mut web::ServiceConfig) {
         .service(get_submission_by_other_submissions_its_user_created);
 }
 
-#[post("/submission")]
+#[post("/api/submission")]
 async fn add_submission(pool: Data<DbPool>, new_submission_json: Json<NewSubmission>) -> HttpResponse {
     let new_submission = new_submission_json.into_inner();
     if !new_submission.is_valid() {
@@ -28,7 +28,7 @@ async fn add_submission(pool: Data<DbPool>, new_submission_json: Json<NewSubmiss
     HttpResponse::Ok().finish()
 }
 
-#[get("/submission")]
+#[get("/api/submission")]
 async fn all_submissions(pool: Data<DbPool>) -> HttpResponse {
     let submissions = web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -38,7 +38,7 @@ async fn all_submissions(pool: Data<DbPool>) -> HttpResponse {
     HttpResponse::Ok().json(submissions)
 }
 
-#[get("/submission/{id}")]
+#[get("/api/submission/{id}")]
 async fn get_submission(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
     let id = path.into_inner();
     let submission = web::block(move || {
@@ -54,7 +54,7 @@ async fn get_submission(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
     HttpResponse::Ok().json(submission)
 }
 
-#[put("/submission")]
+#[put("/api/submission")]
 async fn update_submission(pool: Data<DbPool>, submission_json: Json<Submission>) -> HttpResponse {
     let submission = submission_json.into_inner();
     if !submission.is_valid() {
@@ -72,7 +72,7 @@ async fn update_submission(pool: Data<DbPool>, submission_json: Json<Submission>
     }
 }
 
-#[delete("/submission/{id}")]
+#[delete("/api/submission/{id}")]
 async fn delete_submission(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
     let val = web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -85,7 +85,7 @@ async fn delete_submission(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse 
     }
 }
 
-#[get("/submission-by-other-submissions-its-users-created")]
+#[get("/api/submission-by-other-submissions-its-users-created")]
 async fn get_submission_by_other_submissions_its_user_created(pool: Data<DbPool>) -> HttpResponse {
     let mut submissions = web::block(move || {
         let mut conn = pool.get().unwrap();

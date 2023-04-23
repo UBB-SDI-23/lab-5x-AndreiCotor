@@ -5,6 +5,7 @@ use actix_web::web::{Data, Json, Path};
 use crate::model::problem::{NewProblem, Problem};
 use serde::{Deserialize};
 use crate::DbPool;
+use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::model::dto::problem_dto::{ProblemByOtherSolvedProblemsDTO, ProblemDTO, ProblemStatisticsDTO};
 use crate::repository::{problem_repository, submission_repository, users_repo};
 
@@ -23,7 +24,7 @@ pub fn problem_config(cfg: &mut web::ServiceConfig) {
         .service(get_problem_number_of_other_problems_solved_by_its_solvers);
 }
 
-#[post("/problem")]
+#[post("/api/problem")]
 async fn add_problem(pool: Data<DbPool>, new_problem_json: Json<NewProblem>) -> HttpResponse {
     let new_problem = new_problem_json.into_inner();
     if !new_problem.is_valid() {
@@ -37,7 +38,7 @@ async fn add_problem(pool: Data<DbPool>, new_problem_json: Json<NewProblem>) -> 
     HttpResponse::Ok().finish()
 }
 
-#[delete("/problem/{id}")]
+#[delete("/api/problem/{id}")]
 async fn delete_problem(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
     web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -47,7 +48,7 @@ async fn delete_problem(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
-#[put("/problem")]
+#[put("/api/problem")]
 async fn update_problem(pool: Data<DbPool>, new_problem_json: Json<Problem>) -> HttpResponse {
     let new_problem = new_problem_json.into_inner();
     if !new_problem.is_valid() {
@@ -62,7 +63,7 @@ async fn update_problem(pool: Data<DbPool>, new_problem_json: Json<Problem>) -> 
     HttpResponse::Ok().finish()
 }
 
-#[get("/problem")]
+/*#[get("/api/problem")]
 async fn all_problems(pool: Data<DbPool>, query: web::Query<RatingQuery>) -> HttpResponse {
     let problems = web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -73,9 +74,21 @@ async fn all_problems(pool: Data<DbPool>, query: web::Query<RatingQuery>) -> Htt
     }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
 
     HttpResponse::Ok().json(problems)
+}*/
+
+#[get("/api/problem")]
+async fn all_problems(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> HttpResponse {
+    let mut problems = web::block(move || {
+        let mut conn = pool.get().unwrap();
+        problem_repository::get_problems_paginated(&mut conn, query.into_inner())
+    }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
+
+    problems.sort_by(|a, b| a.id.cmp(&b.id));
+
+    HttpResponse::Ok().json(problems)
 }
 
-#[get("/problem/{id}")]
+#[get("/api/problem/{id}")]
 async fn get_problem_by_id(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
     let id = path.into_inner();
 
@@ -92,7 +105,7 @@ async fn get_problem_by_id(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse 
     HttpResponse::Ok().json(problem)
 }
 
-#[get("/problem-by-success-rate")]
+#[get("/api/problem-by-success-rate")]
 async fn get_problems_by_success_rate(pool: Data<DbPool>) -> HttpResponse {
     let mut problems = web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -106,7 +119,7 @@ async fn get_problems_by_success_rate(pool: Data<DbPool>) -> HttpResponse {
     HttpResponse::Ok().json(problems)
 }
 
-#[get("/problem-report-solved-by-others")]
+#[get("/api/problem-report-solved-by-others")]
 async fn get_problem_number_of_other_problems_solved_by_its_solvers(pool: Data<DbPool>) -> HttpResponse {
     let mut problems = web::block(move || {
         let mut conn = pool.get().unwrap();
