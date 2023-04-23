@@ -2,9 +2,7 @@ import {useEffect, useState} from "react";
 import {ProblemsService} from "../services/problems-service";
 import {Problem} from "../model/problem";
 import {useNavigate} from "react-router-dom";
-import RatingDisplay from "../components/RatingDisplay";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faTrash, faPenToSquare} from "@fortawesome/free-solid-svg-icons";
+import Table from "../components/Table";
 
 export default function ProblemsList() {
     const [problemList, setProblemList] = useState<Problem[]>([]);
@@ -26,29 +24,11 @@ export default function ProblemsList() {
         }
     }
 
-    function sortByRating() {
+    /*function sortByRating() {
         let x = JSON.parse(JSON.stringify(problemList));
         x = x.sort((a: Problem, b: Problem) => a.rating - b.rating);
         setProblemList(x);
-    }
-
-    const tableRows = problemList.map((el, index) => {
-        return (<tr key={index}>
-            <td onClick={() => navigate("/problem/" + el.id)}>{index + 1}</td>
-            <td onClick={() => navigate("/problem/" + el.id)}>{el.name}</td>
-            <td onClick={() => navigate("/problem/" + el.id)}>{el.author}</td>
-            <td onClick={() => navigate("/problem/" + el.id)}>{el.contest}</td>
-            <td onClick={() => navigate("/problem/" + el.id)}><RatingDisplay rating={el.rating} /></td>
-            <td>
-                <button className="button is-danger" onClick={() => deleteProblem(String(el.id))}>
-                    <FontAwesomeIcon icon={faTrash} />
-                </button>
-                <button className="button is-link ml-2" onClick={() => navigate("/problem/edit/" + el.id)}>
-                    <FontAwesomeIcon icon={faPenToSquare} />
-                </button>
-            </td>
-        </tr>);
-    });
+    }*/
 
     return (
         <div>
@@ -62,21 +42,12 @@ export default function ProblemsList() {
                     </button>
                 </div>
             </div>
-            <table className="table is-hoverable is-fullwidth ">
-                <thead>
-                    <tr>
-                        <th><abbr title="Index">#</abbr></th>
-                        <th>Name</th>
-                        <th>Author</th>
-                        <th>Contest</th>
-                        <th onClick={() => sortByRating()}>Rating</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {tableRows}
-                </tbody>
-            </table>
+            <Table columns={["Name", "Author", "Contest", "Rating"]}
+                   properties={["name", "author", "contest", "rating"]}
+                   elements={problemList}
+                   path={"/problem"}
+                   deleteFunction={(id) => deleteProblem(id)}
+            />
         </div>
     );
 }
