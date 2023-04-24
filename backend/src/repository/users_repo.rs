@@ -159,13 +159,11 @@ mod real {
 
     pub fn get_user_with_num_participations(db: &mut PgConnection, pagination: StatisticPagination) -> Result<Vec<(User, i32)>, DbError> {
         let auxiliary_list =  if pagination.direction == 1 {
-            sql_query(format!("SELECT U.ID AS UID, CAST(COUNT(*) AS Integer) AS CNT FROM USERS U LEFT JOIN PARTICIPATES P ON U.ID = P.UID GROUP BY U.ID HAVING COUNT(*) > {} \
-            OR (COUNT(*) = {} AND U.ID > {}) ORDER BY COUNT(*), U.ID LIMIT {}", pagination.last_stat, pagination.last_stat, pagination.last_id, pagination.limit))
+            sql_query(format!("SELECT * FROM USERSPARTICIPATIONS WHERE CNT > {} OR (CNT = {} AND uID > {}) ORDER BY CNT, UID limit {}", pagination.last_stat, pagination.last_stat, pagination.last_id, pagination.limit))
                 .get_results::<Auxiliary>(db)?
         }
         else {
-            sql_query(format!("SELECT U.ID AS UID, CAST(COUNT(*) AS Integer) AS CNT FROM USERS U LEFT JOIN PARTICIPATES P ON U.ID = P.UID GROUP BY U.ID HAVING COUNT(*) < {} \
-            OR (COUNT(*) = {} AND U.ID < {}) ORDER BY COUNT(*) DESC, U.ID DESC LIMIT {}", pagination.first_stat, pagination.first_stat, pagination.first_id, pagination.limit))
+            sql_query(format!("SELECT * FROM USERSPARTICIPATIONS WHERE CNT < {} OR (CNT = {} AND uID < {}) ORDER BY CNT DESC, UID DESC limit {}", pagination.first_stat, pagination.first_stat, pagination.first_id, pagination.limit))
                 .get_results::<Auxiliary>(db)?
         };
 
