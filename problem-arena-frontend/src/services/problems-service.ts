@@ -37,5 +37,9 @@ export const ProblemsService = {
 
     getProblemsAutocomplete: (name: string): Promise<AxiosResponse<Problem[]>> => {
         return axiosConfigured.get("/problem/autocomplete", {params: {name}})
-    }
+    },
+
+    getNumberOfProblems: (): Promise<AxiosResponse<number>> => {
+        return axiosConfigured.get("/problem/num");
+    },
 }

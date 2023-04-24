@@ -109,17 +109,17 @@ export default function ParticipatesDetailsForm() {
 
     const userNameList = userList.map((el) => {
         return (
-            <button className="panel-block" key={el.id} onClick={() => {setUserId(el.id); setSelectedUserName(el.last_name)}}>
+            <p className="panel-block" key={el.id} onClick={() => {setUserId(el.id); setSelectedUserName(el.last_name)}}>
                 {el.last_name}
-            </button>
+            </p>
         );
     });
 
     const contestNameList = contestList.map((el) => {
         return (
-            <button className="panel-block" key={el.id} onClick={() => {setContestId(el.id); setSelectedContest(el.name)}}>
+            <p className="panel-block" key={el.id} onClick={() => {setContestId(el.id); setSelectedContest(el.name)}}>
                 {el.name}
-            </button>
+            </p>
         );
     });
 

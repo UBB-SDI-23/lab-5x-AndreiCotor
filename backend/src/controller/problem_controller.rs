@@ -35,6 +35,7 @@ pub fn problem_config(cfg: &mut web::ServiceConfig) {
         .service(update_problem)
         .service(all_problems)
         .service(get_problems_autocomplete)
+        .service(problem_number)
         .service(get_problems_by_submissions)
         .service(get_problem_by_id)
         .service(get_problem_number_of_other_problems_solved_by_its_solvers);
@@ -91,6 +92,16 @@ async fn all_problems(pool: Data<DbPool>, query: web::Query<RatingQuery>) -> Htt
 
     HttpResponse::Ok().json(problems)
 }*/
+
+#[get("/api/problem/num")]
+async fn problem_number(pool: Data<DbPool>) -> HttpResponse {
+    let res = web::block(move || {
+        let mut conn = pool.get().unwrap();
+        problem_repository::number_of_problems(&mut conn).unwrap()
+    }).await.unwrap();
+
+    HttpResponse::Ok().json(res)
+}
 
 #[get("/api/problem")]
 async fn all_problems(pool: Data<DbPool>, query: web::Query<RatingQuery>) -> HttpResponse {

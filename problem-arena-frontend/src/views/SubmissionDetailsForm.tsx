@@ -115,17 +115,17 @@ export default function SubmissionDetailsForm() {
 
     const userNameList = userList.map((el) => {
        return (
-           <button className="panel-block" key={el.id} onClick={() => {setUserId(el.id); setSelectedUserName(el.last_name)}}>
+           <p className="panel-block" key={el.id} onClick={() => {setUserId(el.id); setSelectedUserName(el.last_name)}}>
                {el.last_name}
-           </button>
+           </p>
        );
     });
 
     const problemNameList = problemList.map((el) => {
         return (
-            <button className="panel-block" key={el.id} onClick={() => {setProblemId(el.id); setSelectedProblem(el.name)}}>
+            <p className="panel-block" key={el.id} onClick={() => {setProblemId(el.id); setSelectedProblem(el.name)}}>
                 {el.name}
-            </button>
+            </p>
         );
     });
 
