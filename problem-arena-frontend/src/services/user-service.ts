@@ -1,7 +1,7 @@
 import {axiosConfigured} from "../config";
 import {AxiosResponse} from "axios";
-import {PaginationDTO} from "../model/PaginationDTO";
-import {NewUser, User} from "../model/user";
+import {PaginationDTO, StatisticPagination} from "../model/PaginationDTO";
+import {NewUser, User, UserReportDTO} from "../model/user";
 
 export const UserService = {
     getUsers: (pagination: PaginationDTO): Promise<AxiosResponse<User[]>> => {
@@ -26,5 +26,9 @@ export const UserService = {
 
     getUsersAutocomplete: (last_name: string): Promise<AxiosResponse<User[]>> => {
         return axiosConfigured.get("/user/autocomplete", {params: {lname: last_name}})
-    }
+    },
+
+    getProblemsByParticipations: (pagination: StatisticPagination): Promise<AxiosResponse<UserReportDTO[]>> => {
+        return axiosConfigured.get("/user-by-number-of-participations", {params: pagination});
+    },
 }
