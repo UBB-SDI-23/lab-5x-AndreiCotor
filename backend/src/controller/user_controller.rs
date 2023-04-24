@@ -2,7 +2,7 @@ use actix_web::{HttpResponse, web, get, delete, put, post};
 use actix_web::web::{Data, Json, Path};
 use serde::Deserialize;
 use crate::DbPool;
-use crate::model::dto::pagination_dto::PaginationDTO;
+use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
 use crate::model::dto::user_dto::{UserDTO, UserReportDTO};
 use crate::model::user::{NewUser, User};
 use crate::repository::{submission_repository, users_repo};
@@ -91,15 +91,15 @@ async fn get_user_by_id(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
 }
 
 #[get("/api/user-by-number-of-participations")]
-async fn get_users_by_number_of_participations(pool: Data<DbPool>) -> HttpResponse {
+async fn get_users_by_number_of_participations(pool: Data<DbPool>, query: web::Query<StatisticPagination>) -> HttpResponse {
     let mut users = web::block(move || {
         let mut conn = pool.get().unwrap();
-        users_repo::get_all_users_with_participations(&mut conn).unwrap().iter()
-            .map(|(user, participations)| UserReportDTO{user: user.clone(), participations: participations.len()})
+        users_repo::get_user_with_num_participations(&mut conn, query.into_inner()).unwrap().iter()
+            .map(|(user, participations)| UserReportDTO{user: user.clone(), participations: *participations})
             .collect::<Vec<UserReportDTO>>()
     }).await.unwrap();
 
-    users.sort_by(|a, b| b.participations.cmp(&a.participations));
+    users.sort_by(|a, b| (a.participations, a.user.id).cmp(&(b.participations, b.user.id)));
 
     HttpResponse::Ok().json(users)
 }

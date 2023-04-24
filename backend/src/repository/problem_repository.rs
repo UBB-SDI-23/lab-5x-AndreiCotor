@@ -1,4 +1,4 @@
-use crate::model::dto::pagination_dto::PaginationDTO;
+use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
 use crate::model::problem::{NewProblem, Problem};
 use crate::model::submission::Submission;
 use crate::repository::{DbConn, DbError};
@@ -32,9 +32,16 @@ pub fn get_problem_by_id(db: &mut Mockable<DbConn>, uid: i32) -> Result<Option<P
     }
 }
 
-pub fn get_problems_rating_larger(db: &mut Mockable<DbConn>, problem_rating: i32) -> Result<Vec<Problem>, DbError> {
+pub fn get_problems_rating_larger(db: &mut Mockable<DbConn>, problem_rating: i32, pagination: PaginationDTO) -> Result<Vec<Problem>, DbError> {
     match db {
-        Mockable::Real(inner) => real::get_problems_rating_larger(inner, problem_rating),
+        Mockable::Real(inner) => real::get_problems_rating_larger(inner, problem_rating, pagination),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
+pub fn get_problems_by_submissions(db: &mut Mockable<DbConn>, pagination: StatisticPagination) -> Result<Vec<(Problem, i32)>, DbError> {
+    match db {
+        Mockable::Real(inner) => real::get_problems_by_submissions(inner, pagination),
         Mockable::Mock => panic!("Mock not implemented!")
     }
 }
@@ -69,11 +76,21 @@ pub fn get_problems_with_submissions(db: &mut Mockable<DbConn>) -> Result<Vec<(P
 
 mod real {
     use diesel::prelude::*;
-    use crate::model::dto::pagination_dto::PaginationDTO;
+    use diesel::sql_query;
+    use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
     use crate::model::problem::{NewProblem, Problem};
     use crate::model::submission::Submission;
     use crate::repository::DbError;
     use crate::schema::problems::dsl::*;
+    use diesel::sql_types::Integer;
+
+    #[derive(QueryableByName, Debug)]
+    struct Auxiliary {
+        #[diesel(sql_type = Integer)]
+        pub pid: i32,
+        #[diesel(sql_type = Integer)]
+        pub cnt: i32
+    }
 
     pub fn get_problems_paginated(db: &mut PgConnection, pagination: PaginationDTO) -> Result<Vec<Problem>, DbError> {
         let problem_list = if pagination.direction == 1 {
@@ -113,8 +130,19 @@ mod real {
         Ok(problem)
     }
 
-    pub fn get_problems_rating_larger(db: &mut PgConnection, problem_rating: i32) -> Result<Vec<Problem>, DbError> {
-        let problem_list = problems.filter(rating.gt(problem_rating)).load(db).unwrap();
+    pub fn get_problems_rating_larger(db: &mut PgConnection, problem_rating: i32, pagination: PaginationDTO) -> Result<Vec<Problem>, DbError> {
+        let problem_list = if pagination.direction == 1 {
+            problems.filter(rating.gt(problem_rating).and(id.gt(pagination.last_id)))
+                .order(id.asc())
+                .limit(pagination.limit as i64)
+                .load(db)?
+        } else {
+            problems.filter(rating.gt(problem_rating).and(id.lt(pagination.first_id)))
+                .order(id.desc())
+                .limit(pagination.limit as i64)
+                .load(db)?
+        };
+
         Ok(problem_list)
     }
 
@@ -128,6 +156,29 @@ mod real {
 
     pub fn update_problem(db: &mut PgConnection, problem: Problem) {
         diesel::update(problems.filter(id.eq(problem.id))).set(problem).execute(db).unwrap();
+    }
+
+    pub fn get_problems_by_submissions(db: &mut PgConnection, pagination: StatisticPagination) -> Result<Vec<(Problem, i32)>, DbError> {
+        use crate::schema::*;
+        use diesel::dsl::count_star;
+
+        let auxiliary_list =  if pagination.direction == 1 {
+            sql_query(format!("SELECT P.ID AS PID, CAST(COUNT(*) AS Integer) AS CNT FROM PROBLEMS P LEFT JOIN SUBMISSIONS S ON P.ID = S.ID GROUP BY P.ID HAVING COUNT(*) > {} \
+            OR (COUNT(*) = {} AND P.ID > {}) ORDER BY COUNT(*), P.ID LIMIT {}", pagination.last_stat, pagination.last_stat, pagination.last_id, pagination.limit))
+                .get_results::<Auxiliary>(db)?
+        }
+        else {
+            sql_query(format!("SELECT P.ID AS PID, CAST(COUNT(*) AS Integer) AS CNT FROM PROBLEMS P LEFT JOIN SUBMISSIONS S ON P.ID = S.ID GROUP BY P.ID HAVING COUNT(*) < {} \
+            OR (COUNT(*) = {} AND P.ID < {}) ORDER BY COUNT(*) DESC, P.ID DESC LIMIT {}", pagination.first_stat, pagination.first_stat, pagination.first_id, pagination.limit))
+                .get_results::<Auxiliary>(db)?
+        };
+
+        let mut problem_list = vec![];
+        for el in auxiliary_list {
+            problem_list.push((get_problem_by_id(db,el.pid).unwrap().unwrap(),el.cnt));
+        }
+
+        Ok(problem_list)
     }
 
     pub fn get_problems_with_submissions(db: &mut PgConnection) -> Result<Vec<(Problem, Vec<Submission>)>, DbError> {

@@ -17,3 +17,13 @@ pub struct ParticipationPaginationDTO {
     pub direction: i32,
     pub limit: i32
 }
+
+#[derive(Deserialize)]
+pub struct StatisticPagination {
+    pub first_stat: i32,
+    pub first_id: i32,
+    pub last_stat: i32,
+    pub last_id: i32,
+    pub direction: i32,
+    pub limit: i32
+}

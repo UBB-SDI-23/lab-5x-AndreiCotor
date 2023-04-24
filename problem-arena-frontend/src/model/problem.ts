@@ -22,5 +22,5 @@ export interface ProblemStatisticsDTO {
     contest: string
     statement: string
     rating: number,
-    success_rate: number | null
+    cnt: number
 }

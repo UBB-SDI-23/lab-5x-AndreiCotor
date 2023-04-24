@@ -8,16 +8,17 @@ import {PaginationDTO} from "../model/PaginationDTO";
 export default function ProblemsList() {
     const [problemList, setProblemList] = useState<Problem[]>([]);
     const [value, setValue] = useState<number>(0);
+    const [filter, setFilter] = useState<number>();
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
     const navigate = useNavigate();
 
     useEffect(() => {
-        ProblemsService.getProblems(pagination).then((res) => {
+        ProblemsService.getProblems(pagination, filter).then((res) => {
             if (res.data.length > 0) {
                 setProblemList(res.data);
             }
         })
-    }, [value, pagination]);
+    }, [value, pagination, filter]);
 
     function forceUpdate() {
         setValue(value => value + 1);
@@ -58,6 +59,17 @@ export default function ProblemsList() {
                     <button className="button is-pulled-right is-link" onClick={() => navigate("/problem/create")}>
                         Add Problem
                     </button>
+                </div>
+            </div>
+            <div className="field">
+                <label className="label">Rating larger than</label>
+                <div className="control">
+                    <input className="input"
+                           type="number"
+                           placeholder="Rating larger than"
+                           value={filter}
+                           onChange={(e) => setFilter(Number(e.target.value))}
+                    />
                 </div>
             </div>
             <Table columns={["Name", "Author", "Contest", "Rating"]}

@@ -13,5 +13,5 @@ pub struct UserDTO {
 pub struct UserReportDTO {
     #[serde(flatten)]
     pub user: User,
-    pub participations: usize
+    pub participations: i32
 }

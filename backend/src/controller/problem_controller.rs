@@ -5,13 +5,23 @@ use actix_web::web::{Data, Json, Path};
 use crate::model::problem::{NewProblem, Problem};
 use serde::{Deserialize};
 use crate::DbPool;
-use crate::model::dto::pagination_dto::PaginationDTO;
+use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
 use crate::model::dto::problem_dto::{ProblemByOtherSolvedProblemsDTO, ProblemDTO, ProblemStatisticsDTO};
 use crate::repository::{problem_repository, submission_repository, users_repo};
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 pub struct RatingQuery {
+    pub first_id: i32,
+    pub last_id: i32,
+    pub direction: i32,
+    pub limit: i32,
     rating: Option<i32>
+}
+
+impl RatingQuery {
+    pub fn to_pagination(&self) -> PaginationDTO {
+        PaginationDTO {first_id: self.first_id, last_id: self.last_id, direction: self.direction, limit: self.limit }
+    }
 }
 
 #[derive(Deserialize)]
@@ -25,7 +35,7 @@ pub fn problem_config(cfg: &mut web::ServiceConfig) {
         .service(update_problem)
         .service(all_problems)
         .service(get_problems_autocomplete)
-        .service(get_problems_by_success_rate)
+        .service(get_problems_by_submissions)
         .service(get_problem_by_id)
         .service(get_problem_number_of_other_problems_solved_by_its_solvers);
 }
@@ -83,10 +93,13 @@ async fn all_problems(pool: Data<DbPool>, query: web::Query<RatingQuery>) -> Htt
 }*/
 
 #[get("/api/problem")]
-async fn all_problems(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> HttpResponse {
+async fn all_problems(pool: Data<DbPool>, query: web::Query<RatingQuery>) -> HttpResponse {
     let mut problems = web::block(move || {
         let mut conn = pool.get().unwrap();
-        problem_repository::get_problems_paginated(&mut conn, query.into_inner())
+        match query.rating {
+            Some(rating) => problem_repository::get_problems_rating_larger(&mut conn, rating, query.to_pagination()),
+            None => problem_repository::get_problems_paginated(&mut conn, query.to_pagination())
+        }
     }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
 
     problems.sort_by(|a, b| a.id.cmp(&b.id));
@@ -121,16 +134,16 @@ async fn get_problem_by_id(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse 
     HttpResponse::Ok().json(problem)
 }
 
-#[get("/api/problem-by-success-rate")]
-async fn get_problems_by_success_rate(pool: Data<DbPool>) -> HttpResponse {
+#[get("/api/problem-by-submissions")]
+async fn get_problems_by_submissions(pool: Data<DbPool>, query: web::Query<StatisticPagination>) -> HttpResponse {
     let mut problems = web::block(move || {
         let mut conn = pool.get().unwrap();
-        problem_repository::get_problems_with_submissions(&mut conn).unwrap().iter()
-            .map(|(problem, submission_list)| ProblemStatisticsDTO::new(problem.clone(), &submission_list))
+        problem_repository::get_problems_by_submissions(&mut conn, query.into_inner()).unwrap().iter()
+            .map(|(problem, cnt)| ProblemStatisticsDTO{problem: problem.clone(), cnt: *cnt})
             .collect::<Vec<ProblemStatisticsDTO>>()
     }).await.unwrap();
 
-    problems.sort_by(|a, b| b.success_rate.partial_cmp(&a.success_rate).unwrap_or(Equal));
+    problems.sort_by(|a, b| (a.cnt, a.problem.id).cmp(&(b.cnt, b.problem.id)));
 
     HttpResponse::Ok().json(problems)
 }

@@ -1,4 +1,4 @@
-use crate::model::dto::pagination_dto::PaginationDTO;
+use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
 use crate::model::user::{NewUser, User};
 use crate::repository::{DbConn, DbError};
 use crate::model::participates::Participates;
@@ -54,6 +54,13 @@ pub fn update_user(db: &mut Mockable<DbConn>, user: User) {
     }
 }
 
+pub fn get_user_with_num_participations(db: &mut Mockable<DbConn>, pagination: StatisticPagination) -> Result<Vec<(User, i32)>, DbError> {
+    match db {
+        Mockable::Real(inner) => real::get_user_with_num_participations(inner, pagination),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
 pub fn get_all_users_with_participations(db: &mut Mockable<DbConn>) -> Result<Vec<(User, Vec<Participates>)>, DbError> {
     match db {
         Mockable::Real(inner) => real::get_all_users_with_participations(inner),
@@ -70,12 +77,22 @@ pub fn get_all_users_with_submissions(db: &mut Mockable<DbConn>) -> Result<Vec<(
 
 mod real {
     use diesel::prelude::*;
-    use crate::model::dto::pagination_dto::PaginationDTO;
+    use diesel::sql_query;
+    use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
     use crate::model::participates::Participates;
     use crate::model::submission::Submission;
     use crate::model::user::{NewUser, User};
     use crate::repository::DbError;
     use crate::schema::users::dsl::*;
+    use diesel::sql_types::Integer;
+
+    #[derive(QueryableByName, Debug)]
+    struct Auxiliary {
+        #[diesel(sql_type = Integer)]
+        pub uid: i32,
+        #[diesel(sql_type = Integer)]
+        pub cnt: i32
+    }
 
     pub fn get_all_users(db: &mut PgConnection) -> Result<Vec<User>, DbError> {
         let user_list = users.load(db)?;
@@ -138,6 +155,26 @@ mod real {
             .collect::<Vec<(User, Vec<Participates>)>>();
 
         Ok(participations_per_user)
+    }
+
+    pub fn get_user_with_num_participations(db: &mut PgConnection, pagination: StatisticPagination) -> Result<Vec<(User, i32)>, DbError> {
+        let auxiliary_list =  if pagination.direction == 1 {
+            sql_query(format!("SELECT U.ID AS UID, CAST(COUNT(*) AS Integer) AS CNT FROM USERS U LEFT JOIN PARTICIPATES P ON U.ID = P.UID GROUP BY U.ID HAVING COUNT(*) > {} \
+            OR (COUNT(*) = {} AND U.ID > {}) ORDER BY COUNT(*), U.ID LIMIT {}", pagination.last_stat, pagination.last_stat, pagination.last_id, pagination.limit))
+                .get_results::<Auxiliary>(db)?
+        }
+        else {
+            sql_query(format!("SELECT U.ID AS UID, CAST(COUNT(*) AS Integer) AS CNT FROM USERS U LEFT JOIN PARTICIPATES P ON U.ID = P.UID GROUP BY U.ID HAVING COUNT(*) < {} \
+            OR (COUNT(*) = {} AND U.ID < {}) ORDER BY COUNT(*) DESC, U.ID DESC LIMIT {}", pagination.first_stat, pagination.first_stat, pagination.first_id, pagination.limit))
+                .get_results::<Auxiliary>(db)?
+        };
+
+        let mut user_list = vec![];
+        for el in auxiliary_list {
+            user_list.push((get_user_by_id(db,el.uid).unwrap().unwrap(),el.cnt));
+        }
+
+        Ok(user_list)
     }
 
     pub fn get_all_users_with_submissions(db: &mut PgConnection) -> Result<Vec<(User, Vec<Submission>)>, DbError> {

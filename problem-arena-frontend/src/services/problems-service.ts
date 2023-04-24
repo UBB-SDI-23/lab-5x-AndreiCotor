@@ -1,11 +1,18 @@
 import {axiosConfigured} from "../config";
 import {AxiosResponse} from "axios";
 import {NewProblem, Problem, ProblemStatisticsDTO} from "../model/problem";
-import {PaginationDTO} from "../model/PaginationDTO";
+import {PaginationDTO, StatisticPagination} from "../model/PaginationDTO";
 
 export const ProblemsService = {
-    getProblems: (pagination: PaginationDTO): Promise<AxiosResponse<Problem[]>> => {
-        return axiosConfigured.get("/problem", {params: pagination});
+    getProblems: (pagination: PaginationDTO, filter: number | undefined): Promise<AxiosResponse<Problem[]>> => {
+
+        return axiosConfigured.get("/problem", {params: {
+                first_id: pagination.first_id,
+                last_id: pagination.last_id,
+                direction: pagination.direction,
+                limit: pagination.limit,
+                rating: filter
+        }});
     },
 
     getProblem: (id: string): Promise<AxiosResponse<Problem>> => {
@@ -24,8 +31,8 @@ export const ProblemsService = {
         return axiosConfigured.delete("/problem/" + id);
     },
 
-    getProblemsBySuccessRate: (): Promise<AxiosResponse<ProblemStatisticsDTO[]>> => {
-        return axiosConfigured.get("/problem-by-success-rate");
+    getProblemsBySuccessRate: (pagination: StatisticPagination): Promise<AxiosResponse<ProblemStatisticsDTO[]>> => {
+        return axiosConfigured.get("/problem-by-submissions", {params: pagination});
     },
 
     getProblemsAutocomplete: (name: string): Promise<AxiosResponse<Problem[]>> => {

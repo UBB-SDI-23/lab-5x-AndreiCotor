@@ -13,24 +13,7 @@ pub struct ProblemDTO {
 pub struct ProblemStatisticsDTO {
     #[serde(flatten)]
     pub problem: Problem,
-    pub success_rate: Option<f32>
-}
-
-impl ProblemStatisticsDTO {
-    pub fn new(problem: Problem, submission_list: &Vec<Submission>) -> Self {
-        if submission_list.len() == 0 {
-            return ProblemStatisticsDTO {
-                problem,
-                success_rate: None
-            }
-        }
-
-        let successful_attempts = submission_list.iter().filter(|&x| x.score == 100).count();
-        ProblemStatisticsDTO {
-            problem,
-            success_rate: Some((successful_attempts as f32) / (submission_list.len() as f32))
-        }
-    }
+    pub cnt: i32
 }
 
 #[derive(Serialize, Clone, Debug)]

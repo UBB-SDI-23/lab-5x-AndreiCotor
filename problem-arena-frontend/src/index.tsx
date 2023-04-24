@@ -21,6 +21,7 @@ import ContestView from "./views/ContestView";
 import UserView from "./views/UserView";
 import SubmissionView from "./views/SubmissionView";
 import ParticipationView from "./views/ParticipationView";
+import UserListByParticipations from "./views/UserListByParticipations";
 
 const router = createBrowserRouter([{
     path: '/',
@@ -88,6 +89,9 @@ const router = createBrowserRouter([{
 }, {
     path: '/participation/:uid/:cid',
     element: <ParticipationView/>
+}, {
+    path: '/users-by-participation',
+    element: <UserListByParticipations/>
 }]);
 
 const root = ReactDOM.createRoot(
