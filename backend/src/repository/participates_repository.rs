@@ -53,6 +53,13 @@ pub fn update_participation(db: &mut Mockable<DbConn>, part: Participates) -> Qu
     }
 }
 
+pub fn get_participation_by_cid(db: &mut Mockable<DbConn>, coid: i32) -> Result<Vec<Participates>, DbError> {
+    match db {
+        Mockable::Real(inner) => real::get_participation_by_cid(inner, coid),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
 mod real {
     use diesel::prelude::*;
     use crate::model::dto::pagination_dto::ParticipationPaginationDTO;
@@ -88,6 +95,11 @@ mod real {
             .optional()?;
 
         Ok(participation)
+    }
+
+    pub fn get_participation_by_cid(db: &mut PgConnection, coid: i32) -> Result<Vec<Participates>, DbError> {
+        let participation_list = participates.filter(cid.eq(coid)).load(db)?;
+        Ok(participation_list)
     }
 
     pub fn add_participation(db: &mut PgConnection, participation: Participates) -> QueryResult<usize> {

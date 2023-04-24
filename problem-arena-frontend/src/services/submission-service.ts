@@ -4,7 +4,7 @@ import {PaginationDTO} from "../model/PaginationDTO";
 import {NewSubmission, Submission, SubmissionDTO} from "../model/submission";
 
 export const SubmissionService = {
-    getSubmissions: (pagination: PaginationDTO): Promise<AxiosResponse<Submission[]>> => {
+    getSubmissions: (pagination: PaginationDTO): Promise<AxiosResponse<SubmissionDTO[]>> => {
         return axiosConfigured.get("/submission", {params: pagination});
     },
 

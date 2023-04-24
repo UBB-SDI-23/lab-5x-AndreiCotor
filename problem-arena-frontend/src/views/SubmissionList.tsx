@@ -2,11 +2,11 @@ import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {PaginationDTO} from "../model/PaginationDTO";
-import {Submission} from "../model/submission";
+import {SubmissionWithNameDTO} from "../model/submission";
 import {SubmissionService} from "../services/submission-service";
 
 export default function SubmissionList() {
-    const [submissionList, setSubmissionList] = useState<Submission[]>([]);
+    const [submissionList, setSubmissionList] = useState<SubmissionWithNameDTO[]>([]);
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
     const navigate = useNavigate();
@@ -14,7 +14,16 @@ export default function SubmissionList() {
     useEffect(() => {
         SubmissionService.getSubmissions(pagination).then((res) => {
             if (res.data.length > 0) {
-                setSubmissionList(res.data);
+                setSubmissionList(res.data.map((el) => {
+                    return {
+                        id: el.id,
+                        source_code: el.source_code,
+                        score: el.score,
+                        language: el.language,
+                        user: el.user.last_name,
+                        problem: el.problem.name
+                    }
+                }));
             }
         })
     }, [value, pagination]);
@@ -54,8 +63,8 @@ export default function SubmissionList() {
                     </button>
                 </div>
             </div>
-            <Table columns={["Score", "Language"]}
-                   properties={["score", "language"]}
+            <Table columns={["Score", "Language", "User", "Problem"]}
+                   properties={["score", "language", "user", "problem"]}
                    elements={submissionList}
                    path={"/submission"}
                    deleteFunction={(id) => deleteSubmission(id)}

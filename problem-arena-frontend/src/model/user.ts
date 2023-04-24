@@ -24,3 +24,13 @@ export interface UserReportDTO {
     teacher: string,
     participations: number
 }
+
+export interface UserSubmissionsDTO {
+    id: number,
+    first_name: string,
+    last_name: string,
+    school: string,
+    bio: string,
+    teacher: string,
+    cnt: number
+}

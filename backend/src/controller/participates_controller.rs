@@ -2,8 +2,9 @@ use actix_web::{HttpResponse, web, post, delete, put, get};
 use actix_web::web::{Data, Json, Path};
 use crate::DbPool;
 use crate::model::dto::pagination_dto::ParticipationPaginationDTO;
+use crate::model::dto::participates_dto::ParticipatesDTO;
 use crate::model::participates::Participates;
-use crate::repository::participates_repository;
+use crate::repository::{contest_repository, participates_repository, users_repo};
 
 pub fn participates_config(cfg: &mut web::ServiceConfig) {
     cfg.service(add_participates)
@@ -69,12 +70,20 @@ async fn update_participates(pool: Data<DbPool>, new_part: Json<Participates>) -
 async fn all_participates(pool: Data<DbPool>, query: web::Query<ParticipationPaginationDTO>) -> HttpResponse {
     let participations = web::block(move || {
         let mut conn = pool.get().unwrap();
-        participates_repository::get_participation_paginated(&mut conn, query.into_inner())
-    }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish());
+        let participates = participates_repository::get_participation_paginated(&mut conn, query.into_inner()).unwrap();
+
+        let mut res = vec![];
+        for part in participates {
+            let user = users_repo::get_user_by_id(&mut conn, part.uid).unwrap().unwrap();
+            let contest = contest_repository::get_contest_by_id(&mut conn, part.cid).unwrap().unwrap();
+            res.push(ParticipatesDTO{participates: part, user, contest});
+        }
+        res
+    }).await.map_err(|_| HttpResponse::InternalServerError().finish());
 
     match participations {
         Ok(mut v) => {
-            v.sort_by(|a, b| (a.uid, a.cid).cmp(&(b.uid, b.cid)));
+            v.sort_by(|a, b| (a.participates.uid, a.participates.cid).cmp(&(b.participates.uid, b.participates.cid)));
             HttpResponse::Ok().json(v)
         },
         Err(_) => HttpResponse::InternalServerError().finish()

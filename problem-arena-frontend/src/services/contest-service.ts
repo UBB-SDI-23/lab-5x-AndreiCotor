@@ -1,10 +1,10 @@
 import {axiosConfigured} from "../config";
 import {AxiosResponse} from "axios";
 import {PaginationDTO} from "../model/PaginationDTO";
-import {Contest, NewContest} from "../model/contest";
+import {Contest, ContestDTO, NewContest} from "../model/contest";
 
 export const ContestService = {
-    getContests: (pagination: PaginationDTO): Promise<AxiosResponse<Contest[]>> => {
+    getContests: (pagination: PaginationDTO): Promise<AxiosResponse<ContestDTO[]>> => {
         return axiosConfigured.get("/contest", {params: pagination});
     },
 

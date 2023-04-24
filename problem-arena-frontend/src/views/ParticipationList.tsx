@@ -2,11 +2,11 @@ import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {ParticipationPaginationDTO} from "../model/PaginationDTO";
-import {Participation} from "../model/participates";
+import {ParticipationWithName} from "../model/participates";
 import {ParticipationService} from "../services/participates-service";
 
 export default function ParticipationList() {
-    const [participationList, setParticipationList] = useState<Participation[]>([]);
+    const [participationList, setParticipationList] = useState<ParticipationWithName[]>([]);
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<ParticipationPaginationDTO>({
         first_uid: -1,
@@ -21,7 +21,16 @@ export default function ParticipationList() {
     useEffect(() => {
         ParticipationService.getParticipations(pagination).then((res) => {
             if (res.data.length > 0) {
-                setParticipationList(res.data);
+                setParticipationList(res.data.map((el) => {
+                    return {
+                        uid: el.uid,
+                        cid: el.cid,
+                        score: el.score,
+                        official: el.official,
+                        user: el.user.last_name,
+                        contest: el.contest.name
+                    }
+                }));
             }
         })
     }, [value, pagination]);
@@ -67,7 +76,9 @@ export default function ParticipationList() {
         official: String(el.official),
         score: el.score,
         uid: el.uid,
-        cid: el.cid
+        cid: el.cid,
+        user: el.user,
+        contest: el.contest
     }));
 
     return (
@@ -82,8 +93,8 @@ export default function ParticipationList() {
                     </button>
                 </div>
             </div>
-            <Table columns={["Official", "Score"]}
-                   properties={["official", "score"]}
+            <Table columns={["Official", "Score", "User", "Contest"]}
+                   properties={["official", "score", "user", "contest"]}
                    elements={participationsWithURLid}
                    path={"/participation"}
                    deleteFunction={(id) => deleteParticipation(id)}

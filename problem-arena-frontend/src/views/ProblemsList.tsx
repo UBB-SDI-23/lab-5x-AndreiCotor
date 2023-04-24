@@ -1,12 +1,12 @@
 import {useEffect, useState} from "react";
 import {ProblemsService} from "../services/problems-service";
-import {Problem} from "../model/problem";
+import {ProblemStatisticsDTO} from "../model/problem";
 import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {PaginationDTO} from "../model/PaginationDTO";
 
 export default function ProblemsList() {
-    const [problemList, setProblemList] = useState<Problem[]>([]);
+    const [problemList, setProblemList] = useState<ProblemStatisticsDTO[]>([]);
     const [value, setValue] = useState<number>(0);
     const [filter, setFilter] = useState<number>();
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
@@ -72,8 +72,8 @@ export default function ProblemsList() {
                     />
                 </div>
             </div>
-            <Table columns={["Name", "Author", "Contest", "Rating"]}
-                   properties={["name", "author", "contest", "rating"]}
+            <Table columns={["Name", "Author", "Contest", "Rating", "Submissions"]}
+                   properties={["name", "author", "contest", "rating", "cnt"]}
                    elements={problemList}
                    path={"/problem"}
                    deleteFunction={(id) => deleteProblem(id)}

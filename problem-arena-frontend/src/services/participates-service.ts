@@ -1,10 +1,10 @@
 import {axiosConfigured} from "../config";
 import {AxiosResponse} from "axios";
 import {ParticipationPaginationDTO} from "../model/PaginationDTO";
-import {Participation} from "../model/participates";
+import {Participation, ParticipationDTO} from "../model/participates";
 
 export const ParticipationService = {
-    getParticipations: (pagination: ParticipationPaginationDTO): Promise<AxiosResponse<Participation[]>> => {
+    getParticipations: (pagination: ParticipationPaginationDTO): Promise<AxiosResponse<ParticipationDTO[]>> => {
         return axiosConfigured.get("/participates", {params: pagination});
     },
 

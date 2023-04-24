@@ -2,11 +2,11 @@ import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {PaginationDTO} from "../model/PaginationDTO";
-import {Contest} from "../model/contest";
+import {ContestDTO} from "../model/contest";
 import {ContestService} from "../services/contest-service";
 
 export default function ContestList() {
-    const [contestList, setContestList] = useState<Contest[]>([]);
+    const [contestList, setContestList] = useState<ContestDTO[]>([]);
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
     const navigate = useNavigate();
@@ -54,8 +54,8 @@ export default function ContestList() {
                     </button>
                 </div>
             </div>
-            <Table columns={["Name"]}
-                   properties={["name"]}
+            <Table columns={["Name", "Participants"]}
+                   properties={["name", "cnt"]}
                    elements={contestList}
                    path={"/contest"}
                    deleteFunction={(id) => deleteContest(id)}

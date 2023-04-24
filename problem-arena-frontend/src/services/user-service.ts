@@ -1,10 +1,10 @@
 import {axiosConfigured} from "../config";
 import {AxiosResponse} from "axios";
 import {PaginationDTO, StatisticPagination} from "../model/PaginationDTO";
-import {NewUser, User, UserReportDTO} from "../model/user";
+import {NewUser, User, UserReportDTO, UserSubmissionsDTO} from "../model/user";
 
 export const UserService = {
-    getUsers: (pagination: PaginationDTO): Promise<AxiosResponse<User[]>> => {
+    getUsers: (pagination: PaginationDTO): Promise<AxiosResponse<UserSubmissionsDTO[]>> => {
         return axiosConfigured.get("/user", {params: pagination});
     },
 

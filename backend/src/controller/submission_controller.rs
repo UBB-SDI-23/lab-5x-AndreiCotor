@@ -33,10 +33,18 @@ async fn add_submission(pool: Data<DbPool>, new_submission_json: Json<NewSubmiss
 async fn all_submissions(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> HttpResponse {
     let mut submissions = web::block(move || {
         let mut conn = pool.get().unwrap();
-        submission_repository::get_submissions_paginated(&mut conn, query.into_inner())
-    }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
+        let submissions = submission_repository::get_submissions_paginated(&mut conn, query.into_inner()).unwrap();
 
-    submissions.sort_by(|a, b| a.id.cmp(&b.id));
+        let mut res = vec![];
+        for submission in submissions {
+            let user = users_repo::get_user_by_id(&mut conn, submission.user_id).unwrap().unwrap();
+            let problem = problem_repository::get_problem_by_id(&mut conn, submission.problem_id).unwrap().unwrap();
+            res.push(SubmissionDTO{submission, user, problem});
+        }
+        res
+    }).await.map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
+
+    submissions.sort_by(|a, b| a.submission.id.cmp(&b.submission.id));
 
     HttpResponse::Ok().json(submissions)
 }

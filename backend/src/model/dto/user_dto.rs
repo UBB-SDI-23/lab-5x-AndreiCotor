@@ -15,3 +15,10 @@ pub struct UserReportDTO {
     pub user: User,
     pub participations: i32
 }
+
+#[derive(Serialize, Clone, Debug)]
+pub struct UserSubmissionsDTO {
+    #[serde(flatten)]
+    pub user: User,
+    pub cnt: i32
+}

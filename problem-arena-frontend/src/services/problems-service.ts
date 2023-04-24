@@ -4,7 +4,7 @@ import {NewProblem, Problem, ProblemStatisticsDTO} from "../model/problem";
 import {PaginationDTO, StatisticPagination} from "../model/PaginationDTO";
 
 export const ProblemsService = {
-    getProblems: (pagination: PaginationDTO, filter: number | undefined): Promise<AxiosResponse<Problem[]>> => {
+    getProblems: (pagination: PaginationDTO, filter: number | undefined): Promise<AxiosResponse<ProblemStatisticsDTO[]>> => {
 
         return axiosConfigured.get("/problem", {params: {
                 first_id: pagination.first_id,

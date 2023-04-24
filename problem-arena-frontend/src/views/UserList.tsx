@@ -2,11 +2,11 @@ import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {PaginationDTO} from "../model/PaginationDTO";
-import {User} from "../model/user";
+import {UserSubmissionsDTO} from "../model/user";
 import {UserService} from "../services/user-service";
 
 export default function UserList() {
-    const [userList, setUserList] = useState<User[]>([]);
+    const [userList, setUserList] = useState<UserSubmissionsDTO[]>([]);
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
     const navigate = useNavigate();
@@ -54,8 +54,8 @@ export default function UserList() {
                     </button>
                 </div>
             </div>
-            <Table columns={["First Name", "Last Name", "School", "Teacher"]}
-                   properties={["first_name", "last_name", "school", "teacher"]}
+            <Table columns={["First Name", "Last Name", "School", "Teacher", "Submissions"]}
+                   properties={["first_name", "last_name", "school", "teacher", "cnt"]}
                    elements={userList}
                    path={"/user"}
                    deleteFunction={(id) => deleteUser(id)}

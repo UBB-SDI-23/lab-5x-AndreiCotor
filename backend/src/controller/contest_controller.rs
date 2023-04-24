@@ -2,9 +2,11 @@ use actix_web::{HttpResponse, web, post, delete, put, get};
 use actix_web::web::{Data, Json, Path};
 use serde::Deserialize;
 use crate::DbPool;
+use crate::model::contest;
 use crate::model::contest::{Contest, NewContest};
+use crate::model::dto::contest_dto::ContestDTO;
 use crate::model::dto::pagination_dto::PaginationDTO;
-use crate::repository::contest_repository;
+use crate::repository::{contest_repository, participates_repository};
 
 pub fn contest_config(cfg: &mut web::ServiceConfig) {
     cfg.service(add_contest)
@@ -53,10 +55,17 @@ async fn update_contest(pool: Data<DbPool>, new_contest: Json<Contest>) -> HttpR
 async fn all_contests(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> HttpResponse {
     let mut contests = web::block(move || {
         let mut conn = pool.get().unwrap();
-        contest_repository::get_contests_paginated(&mut conn, query.into_inner())
-    }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
+        let contests = contest_repository::get_contests_paginated(&mut conn, query.into_inner()).unwrap();
 
-    contests.sort_by(|a, b| a.id.cmp(&b.id));
+        let mut res = vec![];
+        for contest in contests {
+            let cnt = participates_repository::get_participation_by_cid(&mut conn, contest.id).unwrap().len() as i32;
+            res.push(ContestDTO{contest: contest.clone(), cnt});
+        }
+        res
+    }).await.map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
+
+    contests.sort_by(|a, b| a.contest.id.cmp(&b.contest.id));
 
     HttpResponse::Ok().json(contests)
 }

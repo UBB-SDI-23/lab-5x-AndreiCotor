@@ -96,13 +96,20 @@ async fn all_problems(pool: Data<DbPool>, query: web::Query<RatingQuery>) -> Htt
 async fn all_problems(pool: Data<DbPool>, query: web::Query<RatingQuery>) -> HttpResponse {
     let mut problems = web::block(move || {
         let mut conn = pool.get().unwrap();
-        match query.rating {
+        let problems = match query.rating {
             Some(rating) => problem_repository::get_problems_rating_larger(&mut conn, rating, query.to_pagination()),
             None => problem_repository::get_problems_paginated(&mut conn, query.to_pagination())
-        }
-    }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
+        }.unwrap();
 
-    problems.sort_by(|a, b| a.id.cmp(&b.id));
+        let mut res = vec![];
+        for problem in problems {
+            let cnt = submission_repository::get_all_submissions_by_problem_id(&mut conn, problem.id).unwrap().len() as i32;
+            res.push(ProblemStatisticsDTO{problem: problem.clone(), cnt});
+        }
+        res
+    }).await.map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
+
+    problems.sort_by(|a, b| a.problem.id.cmp(&b.problem.id));
 
     HttpResponse::Ok().json(problems)
 }

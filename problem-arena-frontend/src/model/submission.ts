@@ -26,3 +26,12 @@ export interface SubmissionDTO {
     user: User,
     problem: Problem
 }
+
+export interface SubmissionWithNameDTO {
+    id: number,
+    source_code: string,
+    score: number,
+    language: string,
+    user: string,
+    problem: string
+}
