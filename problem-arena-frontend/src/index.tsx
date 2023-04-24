@@ -17,6 +17,10 @@ import ContestDetailsForm from "./views/ContestDetailsForm";
 import UserDetailsForm from "./views/UserDetailsForm";
 import SubmissionDetailsForm from "./views/SubmissionDetailsForm";
 import ParticipatesDetailsForm from "./views/ParticipatesDetailsForm";
+import ContestView from "./views/ContestView";
+import UserView from "./views/UserView";
+import SubmissionView from "./views/SubmissionView";
+import ParticipationView from "./views/ParticipationView";
 
 const router = createBrowserRouter([{
     path: '/',
@@ -72,6 +76,18 @@ const router = createBrowserRouter([{
 }, {
     path: '/participation/edit/:uid/:cid',
     element: <ParticipatesDetailsForm/>
+}, {
+    path: '/contest/:id',
+    element: <ContestView/>
+}, {
+    path: '/user/:id',
+    element: <UserView/>
+}, {
+    path: '/submission/:id',
+    element: <SubmissionView/>
+}, {
+    path: '/participation/:uid/:cid',
+    element: <ParticipationView/>
 }]);
 
 const root = ReactDOM.createRoot(
