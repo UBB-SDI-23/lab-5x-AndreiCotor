@@ -26,6 +26,7 @@ export default function ParticipatesDetailsForm() {
     const [contestSearch, setContestSearch] = useState<string>("");
     const [userList, setUserList] = useState<User[]>([]);
     const [contestList, setContestList] = useState<Contest[]>([]);
+    const [errors, setErrors] = useState<any>({});
 
     useEffect(() => {
         if (uid !== undefined) {
@@ -44,6 +45,10 @@ export default function ParticipatesDetailsForm() {
     }, [uid, cid]);
 
     function submit() {
+        if (score < 0) {
+            setErrors({score: true});
+            return;
+        }
         if (uid != null) {
             const participation: Participation = {
                 uid: Number(uid),
@@ -190,6 +195,7 @@ export default function ParticipatesDetailsForm() {
                                    onChange={(e) => setScore(Number(e.target.value))}
                             />
                         </div>
+                        {errors["score"]? (<p className="has-text-danger">Score must be larger than 0!</p>) : null}
                     </div>
 
                     <label className="checkbox">

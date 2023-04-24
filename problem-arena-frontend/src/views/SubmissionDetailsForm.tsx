@@ -27,6 +27,7 @@ export default function SubmissionDetailsForm() {
     const [problemSearch, setProblemSearch] = useState<string>("");
     const [userList, setUserList] = useState<User[]>([]);
     const [problemList, setProblemList] = useState<Problem[]>([]);
+    const [errors, setErrors] = useState<any>({});
 
     useEffect(() => {
         if (id !== undefined) {
@@ -46,6 +47,11 @@ export default function SubmissionDetailsForm() {
     }, [id]);
 
     function submit() {
+        if (score < 0 || score > 100) {
+            setErrors({score: true});
+            return;
+        }
+
         if (id != null) {
             const submission: Submission = {
                 id: Number(id),
@@ -198,6 +204,7 @@ export default function SubmissionDetailsForm() {
                                    onChange={(e) => setScore(Number(e.target.value))}
                             />
                         </div>
+                        {errors["score"]? (<p className="has-text-danger">Score must be between 0 and 100!</p>) : null}
                     </div>
 
                     <div className="field">

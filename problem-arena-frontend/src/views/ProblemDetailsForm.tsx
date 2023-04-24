@@ -11,6 +11,7 @@ export default function ProblemDetailsForm() {
     const [contest, setContest] = useState<string>("");
     const [rating, setRating] = useState<number>(1);
     const [statement, setStatement] = useState<string>("");
+    const [errors, setErrors] = useState<any>({});
 
     useEffect(() => {
         if (id !== undefined) {
@@ -26,6 +27,21 @@ export default function ProblemDetailsForm() {
     }, [id]);
 
     function submit() {
+        if (rating < 0 || rating > 5) {
+            setErrors({rating: true});
+            return;
+        }
+
+        if (name.length < 3) {
+            setErrors({name: true});
+            return;
+        }
+
+        if (statement.length === 0) {
+            setErrors({statement: true});
+            return;
+        }
+
         if (id != null) {
             const problem: Problem = {
                 id: Number(id),
@@ -81,6 +97,7 @@ export default function ProblemDetailsForm() {
                                    onChange={(e) => setName(e.target.value)}
                             />
                         </div>
+                        {errors["name"]? (<p className="has-text-danger">Name must be longer than 3 characters!</p>) : null}
                     </div>
 
                     <div className="field">
@@ -120,6 +137,7 @@ export default function ProblemDetailsForm() {
                                 </select>
                             </div>
                         </div>
+                        {errors["rating"]? (<p className="has-text-danger">Rating must be between 0 and 5!</p>) : null}
                     </div>
 
                     <div className="field">
@@ -132,6 +150,7 @@ export default function ProblemDetailsForm() {
                                 onChange={(e) => setStatement(e.target.value)}
                             />
                         </div>
+                        {errors["statement"]? (<p className="has-text-danger">Statement can't be empty!</p>) : null}
                     </div>
 
                     <div className="field is-grouped">
