@@ -41,5 +41,5 @@ export const ProblemsService = {
 
     getNumberOfProblems: (): Promise<AxiosResponse<number>> => {
         return axiosConfigured.get("/problem/num");
-    },
+    }
 }

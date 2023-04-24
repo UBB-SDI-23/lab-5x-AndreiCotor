@@ -43,9 +43,52 @@ export default function ProblemsList() {
         }
     }
 
-    const firstPage = () => {
-        setPagination({first_id: -1, last_id: 0, limit: 10, direction: 1});
-        setPage(1);
+    const toPage = async (pg: number) => {
+        if (pg <= 5) {
+            let pagination = {first_id: -1, last_id: 0, limit: 10, direction: 1};
+            let problems = (await ProblemsService.getProblems(pagination, filter)).data;
+
+            for (let i = 2; i <= pg; i++) {
+                pagination = {first_id: problems[0].id, last_id: problems[problems.length - 1].id, limit: 10, direction: 1};
+                problems = (await ProblemsService.getProblems(pagination, filter)).data;
+            }
+
+            setPage(pg);
+            setProblemList(problems);
+        }
+        else if (pg < page) {
+            let pagination = {first_id: problemList[0].id, last_id: problemList[problemList.length - 1].id, limit: 10, direction: -1};
+            let problems = problemList;
+            for(let i = page - 1; i >= pg; i--) {
+                pagination = {first_id: problems[0].id, last_id: problems[problems.length - 1].id, limit: 10, direction: -1};
+                problems = (await ProblemsService.getProblems(pagination, filter)).data;
+            }
+
+            setPage(pg);
+            setProblemList(problems);
+        }
+        else if (numPages - pg <= 5) {
+            let pagination = {first_id: 1000000000, last_id: 1000000000, limit: 10, direction: -1};
+            let problems = (await ProblemsService.getProblems(pagination, filter)).data;
+            for(let i = numPages - 1; i >= pg; i--) {
+                pagination = {first_id: problems[0].id, last_id: problems[problems.length - 1].id, limit: 10, direction: -1};
+                problems = (await ProblemsService.getProblems(pagination, filter)).data;
+            }
+
+            setPage(pg);
+            setProblemList(problems);
+        }
+        else {
+            let pagination = {first_id: problemList[0].id, last_id: problemList[problemList.length - 1].id, limit: 10, direction: 1};
+            let problems = problemList;
+            for(let i = page + 1; i <= pg; i++) {
+                pagination = {first_id: problems[0].id, last_id: problems[problems.length - 1].id, limit: 10, direction: 1};
+                problems = (await ProblemsService.getProblems(pagination, filter)).data;
+            }
+
+            setPage(pg);
+            setProblemList(problems);
+        }
     }
 
     const nextPage = () => {
@@ -55,11 +98,6 @@ export default function ProblemsList() {
         }
     }
 
-    const lastPage = () => {
-        setPagination({first_id: 1000000000, last_id: 1000000000, limit: 10, direction: -1});
-        setPage(numPages);
-    }
-
     /*function sortByRating() {
         let x = JSON.parse(JSON.stringify(problemList));
         x = x.sort((a: Problem, b: Problem) => a.rating - b.rating);
@@ -67,55 +105,37 @@ export default function ProblemsList() {
     }*/
 
     const paginationComponentLeft = () => {
-        if (page === 1) {
-            return null;
+        let res = []
+        for (let i = 1; i < Math.min(page, 6); i++) {
+            res.push(<li><button className="pagination-link" aria-current="page" onClick={() => toPage(i)}>{i}</button></li>);
         }
-        else if (page === 2) {
-            return (<li><button className="pagination-link" aria-current="page" onClick={() => previousPage()}>{page - 1}</button></li>)
+
+        if (page - 5 > 6) {
+            res.push(<li><span className="pagination-ellipsis">&hellip;</span></li>);
         }
-        else if (page === 3) {
-            return (
-                <>
-                    <li><button className="pagination-link" aria-current="page" onClick={() => firstPage()}>{page - 2}</button></li>
-                    <li><button className="pagination-link" aria-current="page" onClick={() => previousPage()}>{page - 1}</button></li>
-                </>
-            );
+
+        for (let i = Math.max(6, page - 5); i < page; i++) {
+            res.push(<li><button className="pagination-link" aria-current="page" onClick={() => toPage(i)}>{i}</button></li>);
         }
-        else {
-            return (
-                <>
-                    <li><button className="pagination-link" aria-current="page" onClick={() => firstPage()}>1</button></li>
-                    <li><span className="pagination-ellipsis">&hellip;</span></li>
-                    <li><button className="pagination-link" aria-current="page" onClick={() => previousPage()}>{page - 1}</button></li>
-                </>
-            );
-        }
+
+        return res;
     };
 
     const paginationComponentRight = () => {
-        if (page === numPages) {
-            return null;
+        let res = []
+        for (let i = page + 1; i < Math.min(page + 6, numPages + 1); i++) {
+            res.push(<li><button className="pagination-link" aria-current="page" onClick={() => toPage(i)}>{i}</button></li>);
         }
-        else if (page === numPages - 1) {
-            return (<li><button className="pagination-link" aria-current="page" onClick={() => nextPage()}>{page + 1}</button></li>)
+
+        if (page + 6 < numPages - 5) {
+            res.push(<li><span className="pagination-ellipsis">&hellip;</span></li>);
         }
-        else if (page === numPages - 2) {
-            return (
-                <>
-                    <li><button className="pagination-link" aria-current="page" onClick={() => nextPage()}>{page + 1}</button></li>
-                    <li><button className="pagination-link" aria-current="page" onClick={() => lastPage()}>{page + 2}</button></li>
-                </>
-            );
+
+        for (let i = Math.max(numPages - 5, page + 6); i < numPages + 1; i++) {
+            res.push(<li><button className="pagination-link" aria-current="page" onClick={() => toPage(i)}>{i}</button></li>);
         }
-        else {
-            return (
-                <>
-                    <li><button className="pagination-link" aria-current="page" onClick={() => nextPage()}>{page + 1}</button></li>
-                    <li><span className="pagination-ellipsis">&hellip;</span></li>
-                    <li><button className="pagination-link" aria-current="page" onClick={() => lastPage()}>{numPages}</button></li>
-                </>
-            );
-        }
+
+        return res;
     }
 
     return (
