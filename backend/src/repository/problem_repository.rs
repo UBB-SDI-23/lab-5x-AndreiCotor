@@ -163,11 +163,11 @@ mod real {
         use diesel::dsl::count_star;
 
         let auxiliary_list =  if pagination.direction == 1 {
-            sql_query(format!("SELECT * FROM PROBLEMSSUBMISSIONS WHERE CNT > {} OR (CNT = {} AND PID > {}) ORDER BY CNT, UID limit {}", pagination.last_stat, pagination.last_stat, pagination.last_id, pagination.limit))
+            sql_query(format!("SELECT * FROM PROBLEMSSUBMISSIONS WHERE CNT > {} OR (CNT = {} AND PID > {}) ORDER BY CNT, PID limit {}", pagination.last_stat, pagination.last_stat, pagination.last_id, pagination.limit))
                 .get_results::<Auxiliary>(db)?
         }
         else {
-            sql_query(format!("SELECT * FROM PROBLEMSSUBMISSIONS WHERE CNT < {} OR (CNT = {} AND PID < {}) ORDER BY CNT DESC, UID DESC limit {}", pagination.first_stat, pagination.first_stat, pagination.first_id, pagination.limit))
+            sql_query(format!("SELECT * FROM PROBLEMSSUBMISSIONS WHERE CNT < {} OR (CNT = {} AND PID < {}) ORDER BY CNT DESC, PID DESC limit {}", pagination.first_stat, pagination.first_stat, pagination.first_id, pagination.limit))
                 .get_results::<Auxiliary>(db)?
         };
 
