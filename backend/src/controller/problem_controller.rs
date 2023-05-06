@@ -2,9 +2,11 @@ use std::cmp::Ordering::Equal;
 use std::collections::HashMap;
 use actix_web::{web, get, delete, put, post, HttpResponse};
 use actix_web::web::{Data, Json, Path};
+use actix_web_httpauth::middleware::HttpAuthentication;
 use crate::model::problem::{NewProblem, Problem};
 use serde::{Deserialize};
 use crate::DbPool;
+use crate::middleware::authentication_validator;
 use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
 use crate::model::dto::problem_dto::{ProblemByOtherSolvedProblemsDTO, ProblemDTO, ProblemStatisticsDTO};
 use crate::repository::{problem_repository, submission_repository, users_repo};
@@ -30,15 +32,18 @@ struct Autocomplete {
 }
 
 pub fn problem_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(add_problem)
-        .service(delete_problem)
-        .service(update_problem)
-        .service(all_problems)
+    cfg.service(all_problems)
         .service(get_problems_autocomplete)
         .service(problem_number)
         .service(get_problems_by_submissions)
         .service(get_problem_by_id)
-        .service(get_problem_number_of_other_problems_solved_by_its_solvers);
+        .service(get_problem_number_of_other_problems_solved_by_its_solvers)
+        .service(
+            web::scope("")
+                .wrap(HttpAuthentication::bearer(authentication_validator))
+                .service(add_problem)
+                .service(delete_problem)
+                .service(update_problem));
 }
 
 #[post("/api/problem")]

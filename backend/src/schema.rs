@@ -40,6 +40,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    usercredentials (id) {
+        id -> Int4,
+        username -> Varchar,
+        password -> Varchar,
+    }
+}
+
+diesel::table! {
     users (id) {
         id -> Int4,
         first_name -> Varchar,
@@ -60,5 +68,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     participates,
     problems,
     submissions,
+    usercredentials,
     users,
 );

@@ -13,15 +13,15 @@ export const UserService = {
     },
 
     updateUser: (user: User): Promise<AxiosResponse> => {
-        return axiosConfigured.put("/user", user);
+        return axiosConfigured.put("/user", user, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     },
 
     addUser: (user: NewUser): Promise<AxiosResponse> => {
-        return axiosConfigured.post("/user", user);
+        return axiosConfigured.post("/user", user, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     },
 
     deleteUser: (id: string): Promise<AxiosResponse> => {
-        return axiosConfigured.delete("/user/" + id);
+        return axiosConfigured.delete("/user/" + id, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     },
 
     getUsersAutocomplete: (last_name: string): Promise<AxiosResponse<User[]>> => {

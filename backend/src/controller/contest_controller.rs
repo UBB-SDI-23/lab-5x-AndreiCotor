@@ -1,7 +1,9 @@
 use actix_web::{HttpResponse, web, post, delete, put, get};
 use actix_web::web::{Data, Json, Path};
+use actix_web_httpauth::middleware::HttpAuthentication;
 use serde::Deserialize;
 use crate::DbPool;
+use crate::middleware::authentication_validator;
 use crate::model::contest;
 use crate::model::contest::{Contest, NewContest};
 use crate::model::dto::contest_dto::ContestDTO;
@@ -9,12 +11,15 @@ use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::repository::{contest_repository, participates_repository};
 
 pub fn contest_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(add_contest)
-        .service(delete_contest)
-        .service(update_contest)
-        .service(get_contest_autocomplete)
+    cfg.service(get_contest_autocomplete)
         .service(all_contests)
-        .service(get_contest_by_id);
+        .service(get_contest_by_id)
+        .service(
+        web::scope("")
+            .wrap(HttpAuthentication::bearer(authentication_validator))
+            .service(add_contest)
+            .service(delete_contest)
+            .service(update_contest), );
 }
 
 #[derive(Deserialize)]
