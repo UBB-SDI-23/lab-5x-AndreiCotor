@@ -4,3 +4,5 @@ pub mod user_dto;
 pub mod pagination_dto;
 pub mod contest_dto;
 pub mod participates_dto;
+pub mod token_claims;
+pub mod login_dto;

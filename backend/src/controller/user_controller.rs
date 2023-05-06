@@ -1,20 +1,25 @@
 use actix_web::{HttpResponse, web, get, delete, put, post};
 use actix_web::web::{Data, Json, Path};
+use actix_web_httpauth::middleware::HttpAuthentication;
 use serde::Deserialize;
 use crate::DbPool;
+use crate::middleware::authentication_validator;
 use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
 use crate::model::dto::user_dto::{UserDTO, UserReportDTO, UserSubmissionsDTO};
 use crate::model::user::{NewUser, User};
 use crate::repository::{submission_repository, users_repo};
 
 pub fn user_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(add_user)
-        .service(delete_user)
-        .service(update_user)
-        .service(all_users)
+    cfg.service(all_users)
         .service(get_users_autocomplete)
         .service(get_user_by_id)
-        .service(get_users_by_number_of_participations);
+        .service(get_users_by_number_of_participations)
+        .service(
+            web::scope("")
+                .wrap(HttpAuthentication::bearer(authentication_validator))
+                .service(add_user)
+                .service(delete_user)
+                .service(update_user));
 }
 
 #[derive(Deserialize)]

@@ -1,17 +1,22 @@
 use actix_web::{HttpResponse, web, post, delete, put, get};
 use actix_web::web::{Data, Json, Path};
+use actix_web_httpauth::middleware::HttpAuthentication;
 use crate::DbPool;
+use crate::middleware::authentication_validator;
 use crate::model::dto::pagination_dto::ParticipationPaginationDTO;
 use crate::model::dto::participates_dto::ParticipatesDTO;
 use crate::model::participates::Participates;
 use crate::repository::{contest_repository, participates_repository, users_repo};
 
 pub fn participates_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(add_participates)
-        .service(delete_participates)
-        .service(update_participates)
-        .service(all_participates)
-        .service(get_participates_by_id);
+    cfg.service(all_participates)
+        .service(get_participates_by_id)
+        .service(
+            web::scope("")
+                .wrap(HttpAuthentication::bearer(authentication_validator))
+                .service(add_participates)
+                .service(delete_participates)
+                .service(update_participates));
 }
 
 #[post("/api/participates")]

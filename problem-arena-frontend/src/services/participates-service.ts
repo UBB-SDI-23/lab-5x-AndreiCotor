@@ -13,14 +13,14 @@ export const ParticipationService = {
     },
 
     updateParticipation: (participation: Participation): Promise<AxiosResponse> => {
-        return axiosConfigured.put("/participates", participation);
+        return axiosConfigured.put("/participates", participation, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     },
 
     addParticipation: (participation: Participation): Promise<AxiosResponse> => {
-        return axiosConfigured.post("/participates", [participation]);
+        return axiosConfigured.post("/participates", [participation], {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     },
 
     deleteParticipation: (id: string): Promise<AxiosResponse> => {
-        return axiosConfigured.delete("/participates/" + id);
+        return axiosConfigured.delete("/participates/" + id, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     }
 }

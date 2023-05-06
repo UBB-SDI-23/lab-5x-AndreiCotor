@@ -1,18 +1,23 @@
 use actix_web::{HttpResponse, web, post, get, delete, put};
 use actix_web::web::{Data, Json, Path};
+use actix_web_httpauth::middleware::HttpAuthentication;
 use crate::DbPool;
+use crate::middleware::authentication_validator;
 use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::model::dto::submission_dto::{SubmissionDTO, SubmissionReportDTO};
 use crate::model::submission::{NewSubmission, Submission};
 use crate::repository::{problem_repository, submission_repository, users_repo};
 
 pub fn submission_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(add_submission)
-        .service(all_submissions)
+    cfg.service(all_submissions)
         .service(get_submission)
-        .service(update_submission)
-        .service(delete_submission)
-        .service(get_submission_by_other_submissions_its_user_created);
+        .service(get_submission_by_other_submissions_its_user_created)
+        .service(
+            web::scope("")
+                .wrap(HttpAuthentication::bearer(authentication_validator))
+                .service(add_submission)
+                .service(update_submission)
+                .service(delete_submission));
 }
 
 #[post("/api/submission")]

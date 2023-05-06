@@ -20,15 +20,15 @@ export const ProblemsService = {
     },
 
     updateProblem: (problem: Problem): Promise<AxiosResponse> => {
-        return axiosConfigured.put("/problem", problem);
+        return axiosConfigured.put("/problem", problem, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     },
 
     addProblem: (problem: NewProblem): Promise<AxiosResponse> => {
-        return axiosConfigured.post("/problem", problem);
+        return axiosConfigured.post("/problem", problem, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     },
 
     deleteProblem: (id: string): Promise<AxiosResponse> => {
-        return axiosConfigured.delete("/problem/" + id);
+        return axiosConfigured.delete("/problem/" + id, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     },
 
     getProblemsBySuccessRate: (pagination: StatisticPagination): Promise<AxiosResponse<ProblemStatisticsDTO[]>> => {

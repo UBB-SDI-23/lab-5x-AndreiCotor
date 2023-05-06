@@ -13,15 +13,15 @@ export const ContestService = {
     },
 
     updateContest: (contest: Contest): Promise<AxiosResponse> => {
-        return axiosConfigured.put("/contest", contest);
+        return axiosConfigured.put("/contest", contest, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     },
 
     addContest: (contest: NewContest): Promise<AxiosResponse> => {
-        return axiosConfigured.post("/contest", contest);
+        return axiosConfigured.post("/contest", contest, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     },
 
     deleteContest: (id: string): Promise<AxiosResponse> => {
-        return axiosConfigured.delete("/contest/" + id);
+        return axiosConfigured.delete("/contest/" + id, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     },
 
     getContestAutocomplete: (name: string): Promise<AxiosResponse<Contest[]>> => {

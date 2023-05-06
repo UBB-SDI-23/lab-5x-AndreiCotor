@@ -4,6 +4,7 @@ pub mod submission;
 pub mod dto;
 pub mod contest;
 pub mod participates;
+pub mod user_credentials;
 
 pub trait ModelItem {
     fn get_id(&self) -> i32;
