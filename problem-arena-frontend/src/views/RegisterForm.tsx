@@ -1,29 +1,52 @@
 import {useState} from "react";
 import {useNavigate} from "react-router-dom";
+import {AuthService} from "../services/auth-service";
 
 export default function RegisterForm() {
     const [username, serUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [confPassword, setConfPassword] = useState<string>("");
     const [errors, setErrors] = useState<any>({});
+    const [uuid, setUuid] = useState<String>();
     const navigate = useNavigate();
 
     const validatePassword = () => {
         if (password.length <= 8) {
             setErrors({password: "Password must be longer than 8 characters!"});
-            return;
+            return false;
         }
 
         setErrors({});
+        return true;
     };
 
     const validateConfirmPassword = () => {
         if (password !== confPassword) {
             setErrors({confPassword: "Passwords must be identical!"});
-            return;
+            return false;
         }
 
         setErrors({});
+        return true;
+    }
+    
+    const register = async () => {
+        if (!validateConfirmPassword() || !validatePassword()) {
+            return;
+        }
+
+        try {
+            let uuid = (await AuthService.register(username, password)).data;
+            setUuid(uuid);
+        }
+        catch (err: any) {
+            if (err.response) {
+                setErrors({general: err.response.data});
+            }
+            else {
+                setErrors({general: "An error has occurred!"});
+            }
+        }
     }
 
     return (
@@ -31,6 +54,7 @@ export default function RegisterForm() {
             <h1 className="title">Register</h1>
             <div className="columns">
                 <div className="column is-half-desktop">
+                    {errors["general"]? (<p className="has-text-danger">{errors["general"]}</p>) : null}
                     <div className="field">
                         <label className="label">Username</label>
                         <div className="control">
@@ -74,7 +98,7 @@ export default function RegisterForm() {
                     <p>Already have an account? <a href="/login">Login instead.</a></p>
                     <div className="field is-grouped">
                         <div className="control">
-                            <button className="button is-link">
+                            <button className="button is-link" onClick={() => register()}>
                                 Register
                             </button>
                         </div>
@@ -84,6 +108,7 @@ export default function RegisterForm() {
                             </button>
                         </div>
                     </div>
+                    {uuid? (<a href={"/register/confirm/" + uuid}>Click here to confirm your account</a>): null}
                 </div>
             </div>
         </div>

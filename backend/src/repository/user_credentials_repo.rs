@@ -1,10 +1,10 @@
 use diesel::prelude::*;
-use crate::model::user_credentials::{NewUserCredentials, UserCredentials};
+use crate::model::user_credentials::{InsertableUserCredentials, NewUserCredentials, UserCredentials};
 use crate::repository::{DbConn, DbError};
 use crate::schema::usercredentials::username;
 use crate::utils::mock::Mockable;
 
-pub fn add_user_credentials(db: &mut Mockable<DbConn>, uc: NewUserCredentials) -> QueryResult<usize> {
+pub fn add_user_credentials(db: &mut Mockable<DbConn>, uc: InsertableUserCredentials) -> QueryResult<usize> {
     match db {
         Mockable::Real(inner) => real::add_user_credentials(inner, uc),
         Mockable::Mock => panic!("Mock not implemented!")
@@ -32,13 +32,20 @@ pub fn get_user_credentials_by_id(db: &mut Mockable<DbConn>, ucid: i32) -> Optio
     }
 }
 
+pub fn get_user_credentials_by_uuid(db: &mut Mockable<DbConn>, cuuid: String) -> Option<UserCredentials> {
+    match db {
+        Mockable::Real(inner) => real::get_user_credentials_by_uuid(inner, cuuid),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
 mod real {
     use diesel::prelude::*;
-    use crate::model::user_credentials::{NewUserCredentials, UserCredentials};
+    use crate::model::user_credentials::{InsertableUserCredentials, NewUserCredentials, UserCredentials};
     use crate::repository::DbError;
     use crate::schema::usercredentials::dsl::*;
 
-    pub fn add_user_credentials(db: &mut PgConnection, uc: NewUserCredentials) -> QueryResult<usize> {
+    pub fn add_user_credentials(db: &mut PgConnection, uc: InsertableUserCredentials) -> QueryResult<usize> {
         diesel::insert_into(usercredentials)
             .values(uc)
             .execute(db)
@@ -59,6 +66,13 @@ mod real {
 
     pub fn get_user_credentials_by_id(db: &mut PgConnection, ucid: i32) -> Option<UserCredentials> {
         usercredentials.filter(id.eq(ucid))
+            .first::<UserCredentials>(db)
+            .optional()
+            .unwrap()
+    }
+
+    pub fn get_user_credentials_by_uuid(db: &mut PgConnection, cuuid: String) -> Option<UserCredentials> {
+        usercredentials.filter(uuid.eq(cuuid))
             .first::<UserCredentials>(db)
             .optional()
             .unwrap()
