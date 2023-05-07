@@ -34,3 +34,17 @@ export interface UserSubmissionsDTO {
     teacher: string,
     cnt: number
 }
+
+export interface UserPageDTO {
+    id: number,
+    first_name: string,
+    last_name: string,
+    school: string,
+    bio: string,
+    teacher: string,
+    username: string,
+    problems_proposed: number,
+    contests_created: number,
+    submissions_sent: number,
+    participations: number
+}

@@ -1,3 +1,4 @@
+use diesel::QueryResult;
 use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
 use crate::model::problem::{NewProblem, Problem, UpdProblem};
 use crate::model::submission::Submission;
@@ -82,6 +83,13 @@ pub fn get_problems_with_submissions(db: &mut Mockable<DbConn>) -> Result<Vec<(P
     }
 }
 
+pub fn get_number_of_problems_by_uid(db: &mut Mockable<DbConn>, usid: i32) -> QueryResult<i64> {
+    match db {
+        Mockable::Real(inner) => real::get_number_of_problems_by_uid(inner, usid),
+        Mockable::Mock => panic!("Not implemented")
+    }
+}
+
 mod real {
     use diesel::prelude::*;
     use diesel::sql_query;
@@ -133,6 +141,12 @@ mod real {
             None => problems.limit(10).load(db)?
         };
         Ok(problem_list)
+    }
+
+    pub fn get_number_of_problems_by_uid(db: &mut PgConnection, usid: i32) -> QueryResult<i64> {
+        problems.filter(uid.eq(usid))
+            .count()
+            .get_result(db)
     }
 
     pub fn get_problem_by_id(db: &mut PgConnection, pid: i32) -> Result<Option<Problem>, DbError> {

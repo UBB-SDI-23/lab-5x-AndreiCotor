@@ -60,6 +60,13 @@ pub fn update_submission(db: &mut Mockable<DbConn>, sub: Submission) -> QueryRes
     }
 }
 
+pub fn get_number_of_submissions_by_uid(db: &mut Mockable<DbConn>, usid: i32) -> QueryResult<i64> {
+    match db {
+        Mockable::Real(inner) => real::get_number_of_submissions_by_uid(inner, usid),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
 mod real {
     use diesel::prelude::*;
     use crate::model::dto::pagination_dto::PaginationDTO;
@@ -105,6 +112,12 @@ mod real {
     pub fn get_all_submissions_by_user_id(db: &mut PgConnection, uid: i32) -> Result<Vec<Submission>, DbError> {
         let submission_list = submissions.filter(user_id.eq(uid)).load(db).unwrap();
         Ok(submission_list)
+    }
+
+    pub fn get_number_of_submissions_by_uid(db: &mut PgConnection, usid: i32) -> QueryResult<i64> {
+        submissions.filter(user_id.eq(usid))
+            .count()
+            .get_result(db)
     }
 
     pub fn delete_submission(db: &mut PgConnection, sid: i32) -> QueryResult<usize> {

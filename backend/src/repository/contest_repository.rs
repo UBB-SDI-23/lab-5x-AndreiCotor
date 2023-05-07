@@ -1,3 +1,4 @@
+use diesel::QueryResult;
 use crate::model::contest::{NewContest, Contest, UpdContest};
 use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::repository::{DbConn, DbError};
@@ -52,6 +53,13 @@ pub fn update_contest(db: &mut Mockable<DbConn>, con: UpdContest) {
     }
 }
 
+pub fn get_number_of_contests_by_uid(db: &mut Mockable<DbConn>, usid: i32) -> QueryResult<i64> {
+    match db {
+        Mockable::Real(inner) => real::get_number_of_contests_by_uid(inner, usid),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
 mod real {
     use diesel::prelude::*;
     use crate::model::contest::{Contest, NewContest, UpdContest};
@@ -95,6 +103,12 @@ mod real {
             .optional()?;
 
         Ok(con)
+    }
+
+    pub fn get_number_of_contests_by_uid(db: &mut PgConnection, usid: i32) -> QueryResult<i64> {
+        contest.filter(uid.eq(usid))
+            .count()
+            .get_result(db)
     }
 
     pub fn add_contest(db: &mut PgConnection, con: NewContest) {
