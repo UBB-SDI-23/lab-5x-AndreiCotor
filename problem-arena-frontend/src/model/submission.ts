@@ -33,5 +33,6 @@ export interface SubmissionWithNameDTO {
     score: number,
     language: string,
     user: string,
-    problem: string
+    problem: string,
+    uid: number
 }

@@ -11,13 +11,13 @@ use crate::repository::{problem_repository, submission_repository, users_repo};
 pub fn submission_config(cfg: &mut web::ServiceConfig) {
     cfg.service(all_submissions)
         .service(get_submission)
-        .service(get_submission_by_other_submissions_its_user_created)
-        .service(
-            web::scope("")
-                .wrap(HttpAuthentication::bearer(authentication_validator))
-                .service(add_submission)
-                .service(update_submission)
-                .service(delete_submission));
+        .service(get_submission_by_other_submissions_its_user_created);
+}
+
+pub fn submission_restricted(cfg: &mut web::ServiceConfig) {
+    cfg.service(add_submission)
+        .service(delete_submission)
+        .service(update_submission);
 }
 
 #[post("/api/submission")]

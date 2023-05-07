@@ -1,12 +1,12 @@
 import {useEffect, useState} from "react";
 import {ProblemsService} from "../services/problems-service";
-import {ProblemStatisticsDTO} from "../model/problem";
+import {ProblemWithCreatorDTO} from "../model/problem";
 import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {PaginationDTO} from "../model/PaginationDTO";
 
 export default function ProblemsList() {
-    const [problemList, setProblemList] = useState<ProblemStatisticsDTO[]>([]);
+    const [problemList, setProblemList] = useState<ProblemWithCreatorDTO[]>([]);
     const [value, setValue] = useState<number>(0);
     const [filter, setFilter] = useState<number>();
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
@@ -166,6 +166,8 @@ export default function ProblemsList() {
                    elements={problemList}
                    path={"/problem"}
                    deleteFunction={(id) => deleteProblem(id)}
+                   creator="creator"
+                   uid="uid"
             />
             <nav className="pagination" role="navigation" aria-label="pagination">
                 <button className="pagination-previous" onClick={() => previousPage()}>Previous</button>

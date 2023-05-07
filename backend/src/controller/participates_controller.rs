@@ -10,13 +10,13 @@ use crate::repository::{contest_repository, participates_repository, users_repo}
 
 pub fn participates_config(cfg: &mut web::ServiceConfig) {
     cfg.service(all_participates)
-        .service(get_participates_by_id)
-        .service(
-            web::scope("")
-                .wrap(HttpAuthentication::bearer(authentication_validator))
-                .service(add_participates)
-                .service(delete_participates)
-                .service(update_participates));
+        .service(get_participates_by_id);
+}
+
+pub fn participates_restricted(cfg: &mut web::ServiceConfig) {
+    cfg.service(add_participates)
+        .service(delete_participates)
+        .service(update_participates);
 }
 
 #[post("/api/participates")]

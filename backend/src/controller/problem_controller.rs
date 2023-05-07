@@ -3,13 +3,13 @@ use std::collections::HashMap;
 use actix_web::{web, get, delete, put, post, HttpResponse};
 use actix_web::web::{Data, Json, Path};
 use actix_web_httpauth::middleware::HttpAuthentication;
-use crate::model::problem::{NewProblem, Problem};
+use crate::model::problem::{NewProblem, Problem, UpdProblem};
 use serde::{Deserialize};
 use crate::DbPool;
 use crate::middleware::authentication_validator;
 use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
-use crate::model::dto::problem_dto::{ProblemByOtherSolvedProblemsDTO, ProblemDTO, ProblemStatisticsDTO};
-use crate::repository::{problem_repository, submission_repository, users_repo};
+use crate::model::dto::problem_dto::{ProblemByOtherSolvedProblemsDTO, ProblemDTO, ProblemStatisticsDTO, ProblemWithCreatorDTO};
+use crate::repository::{problem_repository, submission_repository, user_credentials_repo, users_repo};
 
 #[derive(Deserialize)]
 pub struct RatingQuery {
@@ -37,13 +37,14 @@ pub fn problem_config(cfg: &mut web::ServiceConfig) {
         .service(problem_number)
         .service(get_problems_by_submissions)
         .service(get_problem_by_id)
-        .service(get_problem_number_of_other_problems_solved_by_its_solvers)
-        .service(
-            web::scope("")
-                .wrap(HttpAuthentication::bearer(authentication_validator))
-                .service(add_problem)
-                .service(delete_problem)
-                .service(update_problem));
+        .service(get_problem_number_of_other_problems_solved_by_its_solvers);
+
+}
+
+pub fn problem_restricted(cfg: &mut web::ServiceConfig) {
+    cfg.service(add_problem)
+        .service(delete_problem)
+        .service(update_problem);
 }
 
 #[post("/api/problem")]
@@ -71,7 +72,7 @@ async fn delete_problem(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
 }
 
 #[put("/api/problem")]
-async fn update_problem(pool: Data<DbPool>, new_problem_json: Json<Problem>) -> HttpResponse {
+async fn update_problem(pool: Data<DbPool>, new_problem_json: Json<UpdProblem>) -> HttpResponse {
     let new_problem = new_problem_json.into_inner();
     if !new_problem.is_valid() {
         return HttpResponse::BadRequest().finish();
@@ -120,7 +121,8 @@ async fn all_problems(pool: Data<DbPool>, query: web::Query<RatingQuery>) -> Htt
         let mut res = vec![];
         for problem in problems {
             let cnt = submission_repository::get_all_submissions_by_problem_id(&mut conn, problem.id).unwrap().len() as i32;
-            res.push(ProblemStatisticsDTO{problem: problem.clone(), cnt});
+            let creator = user_credentials_repo::get_user_credentials_by_id(&mut conn, problem.uid).unwrap().username;
+            res.push(ProblemWithCreatorDTO{problem: problem.clone(), cnt, creator });
         }
         res
     }).await.map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();

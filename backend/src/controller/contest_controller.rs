@@ -5,21 +5,21 @@ use serde::Deserialize;
 use crate::DbPool;
 use crate::middleware::authentication_validator;
 use crate::model::contest;
-use crate::model::contest::{Contest, NewContest};
-use crate::model::dto::contest_dto::ContestDTO;
+use crate::model::contest::{Contest, NewContest, UpdContest};
+use crate::model::dto::contest_dto::{ContestDTO, ContestWithCreatorDTO};
 use crate::model::dto::pagination_dto::PaginationDTO;
-use crate::repository::{contest_repository, participates_repository};
+use crate::repository::{contest_repository, participates_repository, user_credentials_repo};
 
 pub fn contest_config(cfg: &mut web::ServiceConfig) {
     cfg.service(get_contest_autocomplete)
         .service(all_contests)
-        .service(get_contest_by_id)
-        .service(
-        web::scope("")
-            .wrap(HttpAuthentication::bearer(authentication_validator))
-            .service(add_contest)
-            .service(delete_contest)
-            .service(update_contest), );
+        .service(get_contest_by_id);
+}
+
+pub fn contest_restricted(cfg: &mut web::ServiceConfig) {
+    cfg.service(add_contest)
+        .service(delete_contest)
+        .service(update_contest);
 }
 
 #[derive(Deserialize)]
@@ -47,7 +47,7 @@ async fn delete_contest(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
 }
 
 #[put("/api/contest")]
-async fn update_contest(pool: Data<DbPool>, new_contest: Json<Contest>) -> HttpResponse {
+async fn update_contest(pool: Data<DbPool>, new_contest: Json<UpdContest>) -> HttpResponse {
     web::block(move || {
         let mut conn = pool.get().unwrap();
         contest_repository::update_contest(&mut conn, new_contest.into_inner());
@@ -65,7 +65,8 @@ async fn all_contests(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> H
         let mut res = vec![];
         for contest in contests {
             let cnt = participates_repository::get_participation_by_cid(&mut conn, contest.id).unwrap().len() as i32;
-            res.push(ContestDTO{contest: contest.clone(), cnt});
+            let creator = user_credentials_repo::get_user_credentials_by_id(&mut conn, contest.uid).unwrap().username;
+            res.push(ContestWithCreatorDTO{contest: contest.clone(), cnt, creator});
         }
         res
     }).await.map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();

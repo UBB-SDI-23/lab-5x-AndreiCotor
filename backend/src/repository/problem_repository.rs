@@ -1,5 +1,5 @@
 use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
-use crate::model::problem::{NewProblem, Problem};
+use crate::model::problem::{NewProblem, Problem, UpdProblem};
 use crate::model::submission::Submission;
 use crate::repository::{DbConn, DbError};
 use crate::utils::mock::Mockable;
@@ -68,7 +68,7 @@ pub fn delete_problem(db: &mut Mockable<DbConn>, pid: i32) {
     }
 }
 
-pub fn update_problem(db: &mut Mockable<DbConn>, problem: Problem) {
+pub fn update_problem(db: &mut Mockable<DbConn>, problem: UpdProblem) {
     match db {
         Mockable::Real(inner) => real::update_problem(inner, problem),
         Mockable::Mock => panic!("Mock not implemented!")
@@ -86,7 +86,7 @@ mod real {
     use diesel::prelude::*;
     use diesel::sql_query;
     use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
-    use crate::model::problem::{NewProblem, Problem};
+    use crate::model::problem::{NewProblem, Problem, UpdProblem};
     use crate::model::submission::Submission;
     use crate::repository::DbError;
     use crate::schema::problems::dsl::*;
@@ -135,8 +135,8 @@ mod real {
         Ok(problem_list)
     }
 
-    pub fn get_problem_by_id(db: &mut PgConnection, uid: i32) -> Result<Option<Problem>, DbError> {
-        let problem = problems.filter(id.eq(uid))
+    pub fn get_problem_by_id(db: &mut PgConnection, pid: i32) -> Result<Option<Problem>, DbError> {
+        let problem = problems.filter(id.eq(pid))
             .first::<Problem>(db)
             .optional()?;
 
@@ -167,7 +167,7 @@ mod real {
         diesel::delete(problems.filter(id.eq(pid))).execute(db).unwrap();
     }
 
-    pub fn update_problem(db: &mut PgConnection, problem: Problem) {
+    pub fn update_problem(db: &mut PgConnection, problem: UpdProblem) {
         diesel::update(problems.filter(id.eq(problem.id))).set(problem).execute(db).unwrap();
     }
 
@@ -220,6 +220,7 @@ mod mock {
                 contest: "1".to_string(),
                 statement: "1".to_string(),
                 rating: 0,
+                uid: 1,
             }, vec![Submission{
                 id: 1,
                 user_id: 1,
@@ -249,6 +250,7 @@ mod mock {
                 contest: "2".to_string(),
                 statement: "2".to_string(),
                 rating: 2,
+                uid: 2,
             }, vec![Submission {
                 id: 4,
                 user_id: 4,
