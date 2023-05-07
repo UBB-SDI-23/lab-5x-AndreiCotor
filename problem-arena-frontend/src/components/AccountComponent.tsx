@@ -17,7 +17,7 @@ export default function AccountComponent() {
                     <a className="button is-info mr-2" href="/register">Register</a>
                 </div>):
                 <div>
-                    <a className="mr-2" href="/login">Welcome, {authContext.username}!</a>
+                    <a className="mr-2" href={"/user/" + authContext.id}>Welcome, {authContext.username}!</a>
                     <button className="button is-info mr-2" onClick={() => logout()}>Logout</button>
                 </div>}
         </div>

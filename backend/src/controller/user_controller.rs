@@ -6,9 +6,9 @@ use crate::DbPool;
 use crate::middleware::authentication_validator;
 use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
 use crate::model::dto::token_claims::TokenClaims;
-use crate::model::dto::user_dto::{UserDTO, UserReportDTO, UserSubmissionsDTO};
+use crate::model::dto::user_dto::{UserDTO, UserPageDTO, UserReportDTO, UserSubmissionsDTO};
 use crate::model::user::{NewUser, User};
-use crate::repository::{submission_repository, users_repo};
+use crate::repository::{contest_repository, participates_repository, problem_repository, submission_repository, user_credentials_repo, users_repo};
 
 pub fn user_config(cfg: &mut web::ServiceConfig) {
     cfg.service(all_users)
@@ -104,11 +104,21 @@ async fn get_user_by_id(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
 
     let user = web::block(move || {
         let mut conn = pool.get().unwrap();
+
         let user = users_repo::get_user_by_id(&mut conn, id).unwrap().unwrap();
-        let submission_list = submission_repository::get_all_submissions_by_user_id(&mut conn, id).unwrap();
-        UserDTO {
+        let problems = problem_repository::get_number_of_problems_by_uid(&mut conn, id).unwrap() as i32;
+        let contests = contest_repository::get_number_of_contests_by_uid(&mut conn, id).unwrap() as i32;
+        let submissions = submission_repository::get_number_of_submissions_by_uid(&mut conn, id).unwrap() as i32;
+        let participations = participates_repository::get_number_of_participation_by_uid(&mut conn, id).unwrap() as i32;
+        let uc = user_credentials_repo::get_user_credentials_by_id(&mut conn, id).unwrap();
+
+        UserPageDTO {
             user,
-            submissions: submission_list
+            username: uc.username,
+            problems_proposed: problems,
+            contests_created: contests,
+            submissions_sent: submissions,
+            participations
         }
     }).await.unwrap();
 
