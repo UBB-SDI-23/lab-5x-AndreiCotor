@@ -1,4 +1,4 @@
-use crate::model::contest::{NewContest, Contest};
+use crate::model::contest::{NewContest, Contest, UpdContest};
 use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::repository::{DbConn, DbError};
 use crate::utils::mock::Mockable;
@@ -45,7 +45,7 @@ pub fn delete_contest(db: &mut Mockable<DbConn>, cid: i32) {
     }
 }
 
-pub fn update_contest(db: &mut Mockable<DbConn>, con: Contest) {
+pub fn update_contest(db: &mut Mockable<DbConn>, con: UpdContest) {
     match db {
         Mockable::Real(inner) => real::update_contest(inner, con),
         Mockable::Mock => panic!("Mock not implemented!")
@@ -54,7 +54,7 @@ pub fn update_contest(db: &mut Mockable<DbConn>, con: Contest) {
 
 mod real {
     use diesel::prelude::*;
-    use crate::model::contest::{Contest, NewContest};
+    use crate::model::contest::{Contest, NewContest, UpdContest};
     use crate::model::dto::pagination_dto::PaginationDTO;
     use crate::repository::DbError;
     use crate::schema::contest::dsl::*;
@@ -89,8 +89,8 @@ mod real {
         Ok(contest_list)
     }
 
-    pub fn get_contest_by_id(db: &mut PgConnection, uid: i32) -> Result<Option<Contest>, DbError> {
-        let con = contest.filter(id.eq(uid))
+    pub fn get_contest_by_id(db: &mut PgConnection, cid: i32) -> Result<Option<Contest>, DbError> {
+        let con = contest.filter(id.eq(cid))
             .first::<Contest>(db)
             .optional()?;
 
@@ -105,7 +105,7 @@ mod real {
         diesel::delete(contest.filter(id.eq(cid))).execute(db).unwrap();
     }
 
-    pub fn update_contest(db: &mut PgConnection, con: Contest) {
+    pub fn update_contest(db: &mut PgConnection, con: UpdContest) {
         diesel::update(contest.filter(id.eq(con.id))).set(con).execute(db).unwrap();
     }
 }

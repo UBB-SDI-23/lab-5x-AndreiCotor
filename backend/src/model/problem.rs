@@ -10,7 +10,8 @@ pub struct Problem {
     pub(crate) author: String,
     pub(crate) contest: String,
     pub(crate) statement: String,
-    pub(crate) rating: i32
+    pub(crate) rating: i32,
+    pub uid: i32
 }
 
 impl Problem {
@@ -30,6 +31,23 @@ pub struct NewProblem {
 }
 
 impl NewProblem {
+    pub fn is_valid(&self) -> bool {
+        0 <= self.rating && self.rating <= 5 && self.name.len() > 0 && self.name.len() >= 3
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Insertable, AsChangeset)]
+#[diesel(table_name = problems)]
+pub struct UpdProblem {
+    pub id: i32,
+    pub(crate) name: String,
+    pub(crate) author: String,
+    pub(crate) contest: String,
+    pub(crate) statement: String,
+    pub(crate) rating: i32
+}
+
+impl UpdProblem {
     pub fn is_valid(&self) -> bool {
         0 <= self.rating && self.rating <= 5 && self.name.len() > 0 && self.name.len() >= 3
     }

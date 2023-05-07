@@ -8,6 +8,9 @@ interface TableProps {
     properties: string[],
     elements: any[],
     path: string,
+    creator?: string,
+    uid?: string,
+    user?: string,
     deleteFunction: (id: string) => void
 }
 
@@ -15,14 +18,27 @@ export default function Table(props: TableProps) {
     const navigate = useNavigate();
 
     function extractObjectProperties(properties: string[], obj: any) {
-        return properties.map((prop) => {
+        let tsx_list = properties.map((prop) => {
             return (
                 <td onClick={() => navigate(props.path + "/" + obj.id)}>
                     { prop === "rating"? (<RatingDisplay rating={obj[prop]}/>) : obj[prop] }
                 </td>
-            )
+            );
+
         });
+
+        if (props.creator && props.uid) {
+            tsx_list.push(
+                <td>
+                    <a href={"/user/" + obj[props.uid]}>{obj[props.creator]}</a>
+                </td>
+            );
+        }
+
+        return tsx_list;
     }
+
+
 
     const tableRows = props.elements.map((el, index) => {
         return (<tr key={index}>
@@ -44,6 +60,10 @@ export default function Table(props: TableProps) {
             <th>{ el }</th>
         );
     });
+
+    if ((props.creator && props.uid) || props.user) {
+        tableHeader.push(<th>Username</th>)
+    }
 
     return (
         <div>

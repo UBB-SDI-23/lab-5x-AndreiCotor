@@ -21,7 +21,8 @@ export default function SubmissionList() {
                         score: el.score,
                         language: el.language,
                         user: el.user.last_name,
-                        problem: el.problem.name
+                        problem: el.problem.name,
+                        uid: el.user.id
                     }
                 }));
             }
@@ -63,11 +64,13 @@ export default function SubmissionList() {
                     </button>
                 </div>
             </div>
-            <Table columns={["Score", "Language", "User", "Problem"]}
-                   properties={["score", "language", "user", "problem"]}
+            <Table columns={["Score", "Language", "Problem"]}
+                   properties={["score", "language", "problem"]}
                    elements={submissionList}
                    path={"/submission"}
                    deleteFunction={(id) => deleteSubmission(id)}
+                   creator="user"
+                   uid="uid"
             />
             <nav className="pagination" role="navigation" aria-label="pagination">
                 <button className="pagination-previous" onClick={() => previousPage()}>Previous</button>

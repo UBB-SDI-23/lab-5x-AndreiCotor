@@ -13,13 +13,13 @@ pub fn user_config(cfg: &mut web::ServiceConfig) {
     cfg.service(all_users)
         .service(get_users_autocomplete)
         .service(get_user_by_id)
-        .service(get_users_by_number_of_participations)
-        .service(
-            web::scope("")
-                .wrap(HttpAuthentication::bearer(authentication_validator))
-                .service(add_user)
-                .service(delete_user)
-                .service(update_user));
+        .service(get_users_by_number_of_participations);
+}
+
+pub fn user_restricted(cfg: &mut web::ServiceConfig) {
+    cfg.service(add_user)
+        .service(delete_user)
+        .service(update_user);
 }
 
 #[derive(Deserialize)]

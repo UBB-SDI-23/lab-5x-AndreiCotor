@@ -2,11 +2,11 @@ import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {PaginationDTO} from "../model/PaginationDTO";
-import {ContestDTO} from "../model/contest";
+import {ContestDTO, ContestWithCreatorDTO} from "../model/contest";
 import {ContestService} from "../services/contest-service";
 
 export default function ContestList() {
-    const [contestList, setContestList] = useState<ContestDTO[]>([]);
+    const [contestList, setContestList] = useState<ContestWithCreatorDTO[]>([]);
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
     const navigate = useNavigate();
@@ -59,6 +59,8 @@ export default function ContestList() {
                    elements={contestList}
                    path={"/contest"}
                    deleteFunction={(id) => deleteContest(id)}
+                   uid="uid"
+                   creator="creator"
             />
             <nav className="pagination" role="navigation" aria-label="pagination">
                 <button className="pagination-previous" onClick={() => previousPage()}>Previous</button>

@@ -5,6 +5,7 @@ diesel::table! {
         id -> Int4,
         name -> Varchar,
         description -> Nullable<Varchar>,
+        uid -> Int4,
     }
 }
 
@@ -25,6 +26,7 @@ diesel::table! {
         contest -> Varchar,
         statement -> Varchar,
         rating -> Int4,
+        uid -> Int4,
     }
 }
 
@@ -58,8 +60,10 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(contest -> users (uid));
 diesel::joinable!(participates -> contest (cid));
 diesel::joinable!(participates -> users (uid));
+diesel::joinable!(problems -> users (uid));
 diesel::joinable!(submissions -> problems (problem_id));
 diesel::joinable!(submissions -> users (user_id));
 

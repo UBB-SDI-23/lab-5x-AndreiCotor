@@ -93,11 +93,13 @@ export default function ParticipationList() {
                     </button>
                 </div>
             </div>
-            <Table columns={["Official", "Score", "User", "Contest"]}
-                   properties={["official", "score", "user", "contest"]}
+            <Table columns={["Official", "Score", "Contest"]}
+                   properties={["official", "score", "contest"]}
                    elements={participationsWithURLid}
                    path={"/participation"}
                    deleteFunction={(id) => deleteParticipation(id)}
+                   creator="user"
+                   uid="uid"
             />
             <nav className="pagination" role="navigation" aria-label="pagination">
                 <button className="pagination-previous" onClick={() => previousPage()}>Previous</button>
