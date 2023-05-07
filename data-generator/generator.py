@@ -125,10 +125,10 @@ def generate_contest_batch(start_id: int):
 
 # username, password, confirmed, uuid
 def generate_user_credentials(id: int, final):
-    username = username_list[id]
+    username = username_list[id - 1]
     password = "$argon2id$v=19$m=19456,t=2,p=1$YW5kcmVpZWJvc3Nz$0SaZ1FIgsw6lEBAZfDW8aRrVrktwJ/vsF7YzFPF397I"
     confirmed = "true"
-    uuid = uuid_list[id]
+    uuid = uuid_list[id - 1]
     
     fo.write("(" + str(id) + ", \'" + username + "\', \'" + password + "\', " + confirmed + ", \'" + uuid + "\')")
 
