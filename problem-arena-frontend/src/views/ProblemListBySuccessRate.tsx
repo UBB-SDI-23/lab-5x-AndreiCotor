@@ -68,11 +68,6 @@ export default function ProblemListBySuccessRate() {
                 <div className="column">
                     <h1 className="title">Problem List</h1>
                 </div>
-                <div className="column">
-                    <button className="button is-pulled-right is-link" onClick={() => navigate("/problem/create")}>
-                        Add Problem
-                    </button>
-                </div>
             </div>
             <Table columns={["Name", "Author", "Contest", "Rating", "Submissions"]}
                    properties={["name", "author", "contest", "rating", "cnt"]}

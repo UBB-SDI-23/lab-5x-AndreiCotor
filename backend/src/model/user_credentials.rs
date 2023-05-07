@@ -11,7 +11,8 @@ pub struct UserCredentials {
     pub password: String,
     pub confirmed: bool,
     pub created: NaiveDateTime,
-    pub uuid: String
+    pub uuid: String,
+    pub role: String
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Insertable)]

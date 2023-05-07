@@ -1,9 +1,10 @@
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import {ProblemsService} from "../services/problems-service";
 import {ProblemWithCreatorDTO} from "../model/problem";
 import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {PaginationDTO} from "../model/PaginationDTO";
+import {AuthContext} from "../contexts/AuthContext";
 
 export default function ProblemsList() {
     const [problemList, setProblemList] = useState<ProblemWithCreatorDTO[]>([]);
@@ -13,6 +14,7 @@ export default function ProblemsList() {
     const [page, setPage] = useState<number>(1);
     const [numPages, setNumPages] = useState<number>(10);
     const navigate = useNavigate();
+    const { authContext, setAuthContext } = useContext(AuthContext);
 
     useEffect(() => {
         ProblemsService.getProblems(pagination, filter).then((res) => {
@@ -145,9 +147,9 @@ export default function ProblemsList() {
                     <h1 className="title">Problem List</h1>
                 </div>
                 <div className="column">
-                    <button className="button is-pulled-right is-link" onClick={() => navigate("/problem/create")}>
+                    {authContext? (<button className="button is-pulled-right is-link" onClick={() => navigate("/problem/create")}>
                         Add Problem
-                    </button>
+                    </button>): null}
                 </div>
             </div>
             <div className="field">

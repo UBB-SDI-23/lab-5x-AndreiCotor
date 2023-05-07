@@ -23,5 +23,6 @@ pub struct UpdContest {
 #[diesel(table_name = contest)]
 pub struct NewContest {
     pub name: String,
-    pub description: Option<String>
+    pub description: Option<String>,
+    pub uid: Option<i32>
 }

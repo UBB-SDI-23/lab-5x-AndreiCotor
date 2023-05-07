@@ -1,10 +1,11 @@
 use actix_web::{HttpResponse, web, get, delete, put, post};
-use actix_web::web::{Data, Json, Path};
+use actix_web::web::{Data, Json, Path, ReqData};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use serde::Deserialize;
 use crate::DbPool;
 use crate::middleware::authentication_validator;
 use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
+use crate::model::dto::token_claims::TokenClaims;
 use crate::model::dto::user_dto::{UserDTO, UserReportDTO, UserSubmissionsDTO};
 use crate::model::user::{NewUser, User};
 use crate::repository::{submission_repository, users_repo};
@@ -17,8 +18,7 @@ pub fn user_config(cfg: &mut web::ServiceConfig) {
 }
 
 pub fn user_restricted(cfg: &mut web::ServiceConfig) {
-    cfg.service(add_user)
-        .service(delete_user)
+    cfg.service(delete_user)
         .service(update_user);
 }
 
@@ -26,7 +26,7 @@ pub fn user_restricted(cfg: &mut web::ServiceConfig) {
 struct Autocomplete {
     lname: Option<String>
 }
-
+/*
 #[post("/api/user")]
 async fn add_user(pool: Data<DbPool>, new_user: Json<NewUser>) -> HttpResponse {
     web::block(move || {
@@ -34,20 +34,33 @@ async fn add_user(pool: Data<DbPool>, new_user: Json<NewUser>) -> HttpResponse {
         users_repo::add_user(&mut conn, new_user.into_inner());
     }).await.unwrap();
     HttpResponse::Ok().finish()
-}
+}*/
 
 #[delete("/api/user/{id}")]
-async fn delete_user(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
+async fn delete_user(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, path: Path<i32>) -> HttpResponse {
+    let token_data = req_user.unwrap();
+    let id = path.into_inner();
+
+    if token_data.role == "regular" && token_data.id != id {
+        return HttpResponse::Unauthorized().finish();
+    }
+
     web::block(move || {
         let mut conn = pool.get().unwrap();
-        users_repo::delete_user(&mut conn, path.into_inner());
+        users_repo::delete_user(&mut conn, id);
     }).await.unwrap();
 
     HttpResponse::Ok().finish()
 }
 
 #[put("/api/user")]
-async fn update_user(pool: Data<DbPool>, new_problem: Json<User>) -> HttpResponse {
+async fn update_user(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, new_problem: Json<User>) -> HttpResponse {
+    let token_data = req_user.unwrap();
+
+    if token_data.role == "regular" && token_data.id != new_problem.id {
+        return HttpResponse::Unauthorized().finish();
+    }
+
     web::block(move || {
         let mut conn = pool.get().unwrap();
         users_repo::update_user(&mut conn, new_problem.into_inner());

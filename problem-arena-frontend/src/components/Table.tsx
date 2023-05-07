@@ -2,6 +2,8 @@ import {useNavigate} from "react-router-dom";
 import RatingDisplay from "./RatingDisplay";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPenToSquare, faTrash} from "@fortawesome/free-solid-svg-icons";
+import {useContext} from "react";
+import {AuthContext} from "../contexts/AuthContext";
 
 interface TableProps {
     columns: string[],
@@ -16,6 +18,7 @@ interface TableProps {
 
 export default function Table(props: TableProps) {
     const navigate = useNavigate();
+    const { authContext, setAuthContext } = useContext(AuthContext);
 
     function extractObjectProperties(properties: string[], obj: any) {
         let tsx_list = properties.map((prop) => {
@@ -44,14 +47,15 @@ export default function Table(props: TableProps) {
         return (<tr key={index}>
             <td onClick={() => navigate(props.path + "/" + el.id)}>{index + 1}</td>
             { extractObjectProperties(props.properties, el) }
-            <td>
-                <button className="button is-danger" onClick={() => props.deleteFunction(String(el.id))}>
-                    <FontAwesomeIcon icon={faTrash} />
-                </button>
-                <button className="button is-link ml-2" onClick={() => navigate(props.path + "/edit/" + el.id)}>
-                    <FontAwesomeIcon icon={faPenToSquare} />
-                </button>
-            </td>
+            { (authContext && (authContext.role !== "regular" || (props.uid && authContext.id === el[props.uid])))?
+                (<td>
+                    <button className="button is-danger" onClick={() => props.deleteFunction(String(el.id))}>
+                        <FontAwesomeIcon icon={faTrash} />
+                    </button>
+                    <button className="button is-link ml-2" onClick={() => navigate(props.path + "/edit/" + el.id)}>
+                        <FontAwesomeIcon icon={faPenToSquare} />
+                    </button>
+                </td>): (<td></td>)}
         </tr>);
     });
 

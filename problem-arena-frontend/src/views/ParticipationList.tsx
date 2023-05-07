@@ -1,9 +1,10 @@
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {ParticipationPaginationDTO} from "../model/PaginationDTO";
 import {ParticipationWithName} from "../model/participates";
 import {ParticipationService} from "../services/participates-service";
+import {AuthContext} from "../contexts/AuthContext";
 
 export default function ParticipationList() {
     const [participationList, setParticipationList] = useState<ParticipationWithName[]>([]);
@@ -17,6 +18,7 @@ export default function ParticipationList() {
         direction: 1
     });
     const navigate = useNavigate();
+    const { authContext, setAuthContext } = useContext(AuthContext);
 
     useEffect(() => {
         ParticipationService.getParticipations(pagination).then((res) => {
@@ -88,9 +90,9 @@ export default function ParticipationList() {
                     <h1 className="title">Participation List</h1>
                 </div>
                 <div className="column">
-                    <button className="button is-pulled-right is-link" onClick={() => navigate("/participation/create")}>
+                    {authContext? (<button className="button is-pulled-right is-link" onClick={() => navigate("/participation/create")}>
                         Add Participation
-                    </button>
+                    </button>): null}
                 </div>
             </div>
             <Table columns={["Official", "Score", "Contest"]}

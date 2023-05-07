@@ -27,7 +27,8 @@ pub struct NewProblem {
     pub(crate) author: String,
     pub(crate) contest: String,
     pub(crate) statement: String,
-    pub(crate) rating: i32
+    pub(crate) rating: i32,
+    pub uid: Option<i32>
 }
 
 impl NewProblem {

@@ -1,15 +1,17 @@
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {PaginationDTO} from "../model/PaginationDTO";
 import {ContestDTO, ContestWithCreatorDTO} from "../model/contest";
 import {ContestService} from "../services/contest-service";
+import {AuthContext} from "../contexts/AuthContext";
 
 export default function ContestList() {
     const [contestList, setContestList] = useState<ContestWithCreatorDTO[]>([]);
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
     const navigate = useNavigate();
+    const { authContext, setAuthContext } = useContext(AuthContext);
 
     useEffect(() => {
         ContestService.getContests(pagination).then((res) => {
@@ -49,9 +51,9 @@ export default function ContestList() {
                     <h1 className="title">Contest List</h1>
                 </div>
                 <div className="column">
-                    <button className="button is-pulled-right is-link" onClick={() => navigate("/contest/create")}>
+                    {authContext? (<button className="button is-pulled-right is-link" onClick={() => navigate("/contest/create")}>
                         Add Contest
-                    </button>
+                    </button>): null}
                 </div>
             </div>
             <Table columns={["Name", "Participants"]}

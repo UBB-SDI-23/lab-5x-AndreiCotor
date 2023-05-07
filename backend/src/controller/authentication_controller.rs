@@ -1,9 +1,9 @@
 use actix_web::{HttpResponse, web, post, get};
 use actix_web::web::{Data, Json, Path};
 use password_hash::{PasswordHash, PasswordHasher, Salt};
-use crate::DbPool;
+use crate::{DbPool, model};
 use crate::model::user_credentials::{InsertableUserCredentials, NewUserCredentials};
-use crate::repository::user_credentials_repo;
+use crate::repository::{user_credentials_repo, users_repo};
 use argon2::Argon2;
 use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
 use crate::model::dto::token_claims::TokenClaims;
@@ -12,6 +12,7 @@ use hmac::{Hmac, Mac};
 use sha2::Sha256;
 use uuid::Uuid;
 use crate::model::dto::login_dto::LoginDTO;
+use crate::model::user::User;
 
 pub fn authentication_config(cfg: &mut web::ServiceConfig) {
     cfg.service(login)
@@ -45,9 +46,9 @@ async fn login(pool: Data<DbPool>, credential_json: Json<NewUserCredentials>) ->
                     .as_bytes(),
             ).unwrap();
 
-            let claims = TokenClaims { id: user.id };
+            let claims = TokenClaims { id: user.id, role: user.role.clone() };
             let token_str = claims.sign_with_key(&jwt_secret).unwrap();
-            HttpResponse::Ok().json(LoginDTO{id: user.id, token: token_str, username: user.username })
+            HttpResponse::Ok().json(LoginDTO{id: user.id, token: token_str, username: user.username, role: user.role })
         }
         Err(_) => {
             HttpResponse::BadRequest().json("Invalid password!")
@@ -74,7 +75,13 @@ async fn register(pool: Data<DbPool>, credential_json: Json<NewUserCredentials>)
 
     let res = web::block(move || {
         let mut conn = pool.get().unwrap();
-        user_credentials_repo::add_user_credentials(&mut conn, ins_credential)
+        let res = user_credentials_repo::add_user_credentials(&mut conn, ins_credential.clone());
+        if (res.is_err()) {
+            return Err(());
+        }
+        let added = user_credentials_repo::get_user_credentials(&mut conn, ins_credential.username).unwrap();
+        users_repo::add_user(&mut conn, User::from_id(added.id, added.username));
+        return Ok(());
     }).await.unwrap();
 
     match res {
