@@ -23,6 +23,7 @@ import LoginForm from "./views/LoginForm";
 import RegisterForm from "./views/RegisterForm";
 import {AuthContext} from "./contexts/AuthContext";
 import {loadLoginDTO} from "./model/LoginDTO";
+import ConfirmAccount from "./views/ConfirmAccount";
 
 const router = createBrowserRouter([{
     path: '/',
@@ -99,6 +100,9 @@ const router = createBrowserRouter([{
 }, {
     path: '/register',
     element: <RegisterForm/>
+}, {
+    path: '/register/confirm/:uuid',
+    element: <ConfirmAccount/>
 }]);
 
 

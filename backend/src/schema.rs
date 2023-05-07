@@ -46,6 +46,9 @@ diesel::table! {
         id -> Int4,
         username -> Varchar,
         password -> Varchar,
+        confirmed -> Bool,
+        created -> Timestamp,
+        uuid -> Varchar,
     }
 }
 
