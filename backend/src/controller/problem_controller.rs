@@ -1,7 +1,7 @@
 use std::cmp::Ordering::Equal;
 use std::collections::HashMap;
 use actix_web::{web, get, delete, put, post, HttpResponse};
-use actix_web::web::{Data, Json, Path};
+use actix_web::web::{Data, Json, Path, ReqData};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use crate::model::problem::{NewProblem, Problem, UpdProblem};
 use serde::{Deserialize};
@@ -9,6 +9,7 @@ use crate::DbPool;
 use crate::middleware::authentication_validator;
 use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
 use crate::model::dto::problem_dto::{ProblemByOtherSolvedProblemsDTO, ProblemDTO, ProblemStatisticsDTO, ProblemWithCreatorDTO};
+use crate::model::dto::token_claims::TokenClaims;
 use crate::repository::{problem_repository, submission_repository, user_credentials_repo, users_repo};
 
 #[derive(Deserialize)]
@@ -48,11 +49,13 @@ pub fn problem_restricted(cfg: &mut web::ServiceConfig) {
 }
 
 #[post("/api/problem")]
-async fn add_problem(pool: Data<DbPool>, new_problem_json: Json<NewProblem>) -> HttpResponse {
-    let new_problem = new_problem_json.into_inner();
+async fn add_problem(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, new_problem_json: Json<NewProblem>) -> HttpResponse {
+    let mut new_problem = new_problem_json.into_inner();
     if !new_problem.is_valid() {
         return HttpResponse::BadRequest().finish();
     }
+    
+    new_problem.uid = Some(req_user.unwrap().id);
 
     web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -62,28 +65,47 @@ async fn add_problem(pool: Data<DbPool>, new_problem_json: Json<NewProblem>) -> 
 }
 
 #[delete("/api/problem/{id}")]
-async fn delete_problem(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
-    web::block(move || {
+async fn delete_problem(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, path: Path<i32>) -> HttpResponse {
+    let token_data = req_user.unwrap();
+    let id = path.into_inner();
+    match web::block(move || {
         let mut conn = pool.get().unwrap();
-        problem_repository::delete_problem(&mut conn, path.into_inner());
-    }).await.unwrap();
 
-    HttpResponse::Ok().finish()
+        let problem = problem_repository::get_problem_by_id(&mut conn, id).unwrap().unwrap();
+        if token_data.role == "regular" && token_data.id != problem.uid {
+            return Err(());
+        }
+
+        problem_repository::delete_problem(&mut conn, id);
+        Ok(())
+    }).await.unwrap() {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(_) => HttpResponse::Unauthorized().finish()
+    }
 }
 
 #[put("/api/problem")]
-async fn update_problem(pool: Data<DbPool>, new_problem_json: Json<UpdProblem>) -> HttpResponse {
+async fn update_problem(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, new_problem_json: Json<UpdProblem>) -> HttpResponse {
+    let token_data = req_user.unwrap();
     let new_problem = new_problem_json.into_inner();
     if !new_problem.is_valid() {
         return HttpResponse::BadRequest().finish();
     }
 
-    web::block(move || {
+    match web::block(move || {
         let mut conn = pool.get().unwrap();
-        problem_repository::update_problem(&mut conn, new_problem);
-    }).await.unwrap();
 
-    HttpResponse::Ok().finish()
+        let problem = problem_repository::get_problem_by_id(&mut conn, new_problem.id).unwrap().unwrap();
+        if token_data.role == "regular" && token_data.id != problem.uid {
+            return Err(());
+        }
+
+        problem_repository::update_problem(&mut conn, new_problem);
+        Ok(())
+    }).await.unwrap() {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(_) => HttpResponse::Unauthorized().finish()
+    }
 }
 
 /*#[get("/api/problem")]

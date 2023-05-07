@@ -1,5 +1,5 @@
 use actix_web::dev::ServiceRequest;
-use actix_web::{Error, HttpResponse};
+use actix_web::{Error, HttpMessage, HttpResponse};
 use actix_web::error::ErrorUnauthorized;
 use actix_web_httpauth::extractors::AuthenticationError;
 use actix_web_httpauth::extractors::{bearer::BearerAuth, bearer};
@@ -25,7 +25,10 @@ pub async fn authentication_validator(req: ServiceRequest, credentials: BearerAu
 
     let claims: Result<TokenClaims, jwt::error::Error> = token.verify_with_key(&jwt_secret);
     match claims {
-        Ok(_) => Ok(req),
+        Ok(value) => {
+            req.extensions_mut().insert(value);
+            Ok(req)
+        },
         Err(_) => Err((AuthenticationError::from(config).into(), req))
     }
 }

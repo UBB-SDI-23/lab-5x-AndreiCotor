@@ -1,5 +1,5 @@
 use actix_web::{HttpResponse, web, post, delete, put, get};
-use actix_web::web::{Data, Json, Path};
+use actix_web::web::{Data, Json, Path, ReqData};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use serde::Deserialize;
 use crate::DbPool;
@@ -8,6 +8,7 @@ use crate::model::contest;
 use crate::model::contest::{Contest, NewContest, UpdContest};
 use crate::model::dto::contest_dto::{ContestDTO, ContestWithCreatorDTO};
 use crate::model::dto::pagination_dto::PaginationDTO;
+use crate::model::dto::token_claims::TokenClaims;
 use crate::repository::{contest_repository, participates_repository, user_credentials_repo};
 
 pub fn contest_config(cfg: &mut web::ServiceConfig) {
@@ -28,7 +29,9 @@ struct Autocomplete {
 }
 
 #[post("/api/contest")]
-async fn add_contest(pool: Data<DbPool>, new_contest: Json<NewContest>) -> HttpResponse {
+async fn add_contest(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, mut new_contest: Json<NewContest>) -> HttpResponse {
+    new_contest.uid = Some(req_user.unwrap().id);
+
     web::block(move || {
         let mut conn = pool.get().unwrap();
         contest_repository::add_contest(&mut conn, new_contest.into_inner());
@@ -37,23 +40,42 @@ async fn add_contest(pool: Data<DbPool>, new_contest: Json<NewContest>) -> HttpR
 }
 
 #[delete("/api/contest/{id}")]
-async fn delete_contest(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
-    web::block(move || {
+async fn delete_contest(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, path: Path<i32>) -> HttpResponse {
+    let token_data = req_user.unwrap();
+    let id = path.into_inner();
+    match web::block(move || {
         let mut conn = pool.get().unwrap();
-        contest_repository::delete_contest(&mut conn, path.into_inner());
-    }).await.unwrap();
+        let contest = contest_repository::get_contest_by_id(&mut conn, id).unwrap().unwrap();
 
-    HttpResponse::Ok().finish()
+        if token_data.role == "regular" && token_data.id != contest.uid {
+            return Err(());
+        }
+
+        contest_repository::delete_contest(&mut conn, id);
+        Ok(())
+    }).await.unwrap() {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(_) => HttpResponse::Unauthorized().finish()
+    }
 }
 
 #[put("/api/contest")]
-async fn update_contest(pool: Data<DbPool>, new_contest: Json<UpdContest>) -> HttpResponse {
-    web::block(move || {
+async fn update_contest(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, new_contest: Json<UpdContest>) -> HttpResponse {
+    let token_data = req_user.unwrap();
+    match web::block(move || {
         let mut conn = pool.get().unwrap();
-        contest_repository::update_contest(&mut conn, new_contest.into_inner());
-    }).await.unwrap();
 
-    HttpResponse::Ok().finish()
+        let contest = contest_repository::get_contest_by_id(&mut conn, new_contest.id).unwrap().unwrap();
+        if token_data.role == "regular" && token_data.id != contest.uid {
+            return Err(());
+        }
+
+        contest_repository::update_contest(&mut conn, new_contest.into_inner());
+        Ok(())
+    }).await.unwrap() {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(_) => HttpResponse::Unauthorized().finish()
+    }
 }
 
 #[get("/api/contest")]

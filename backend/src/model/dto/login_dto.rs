@@ -4,5 +4,6 @@ use serde::{Serialize, Deserialize};
 pub struct LoginDTO {
     pub id: i32,
     pub token: String,
-    pub username: String
+    pub username: String,
+    pub role: String
 }

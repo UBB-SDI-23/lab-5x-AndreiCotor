@@ -49,6 +49,7 @@ diesel::table! {
         confirmed -> Bool,
         created -> Timestamp,
         uuid -> Varchar,
+        role -> Varchar,
     }
 }
 

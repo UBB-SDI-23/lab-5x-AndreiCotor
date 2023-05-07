@@ -33,7 +33,7 @@ pub fn get_user_by_id(db: &mut Mockable<DbConn>, uid: i32) -> Result<Option<User
     }
 }
 
-pub fn add_user(db: &mut Mockable<DbConn>, user: NewUser) {
+pub fn add_user(db: &mut Mockable<DbConn>, user: User) {
     match db {
         Mockable::Real(inner) => real::add_user(inner, user),
         Mockable::Mock => panic!("Mock not implemented!")
@@ -132,7 +132,7 @@ mod real {
         Ok(user)
     }
 
-    pub fn add_user(db: &mut PgConnection, user: NewUser) {
+    pub fn add_user(db: &mut PgConnection, user: User) {
         diesel::insert_into(users).values(user).execute(db).unwrap();
     }
 

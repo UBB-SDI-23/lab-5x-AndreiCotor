@@ -62,11 +62,6 @@ export default function UserListByParticipations() {
                 <div className="column">
                     <h1 className="title">User List</h1>
                 </div>
-                <div className="column">
-                    <button className="button is-pulled-right is-link" onClick={() => navigate("/user/create")}>
-                        Add User
-                    </button>
-                </div>
             </div>
             <Table columns={["First Name", "Last Name", "School", "Teacher", "Participations"]}
                    properties={["first_name", "last_name", "school", "teacher", "participations"]}
