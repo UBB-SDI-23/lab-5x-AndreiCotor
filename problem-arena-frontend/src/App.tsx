@@ -24,6 +24,7 @@ import RegisterForm from "./views/RegisterForm";
 import {AuthContext} from "./contexts/AuthContext";
 import {loadLoginDTO} from "./model/LoginDTO";
 import ConfirmAccount from "./views/ConfirmAccount";
+import AdminPanel from "./views/AdminPanel";
 
 const router = createBrowserRouter([{
     path: '/',
@@ -103,6 +104,9 @@ const router = createBrowserRouter([{
 }, {
     path: '/register/confirm/:uuid',
     element: <ConfirmAccount/>
+}, {
+    path: '/admin',
+    element: <AdminPanel/>
 }]);
 
 

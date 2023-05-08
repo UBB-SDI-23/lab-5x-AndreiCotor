@@ -31,5 +31,6 @@ pub struct UserPageDTO {
     pub problems_proposed: i32,
     pub contests_created: i32,
     pub submissions_sent: i32,
-    pub participations: i32
+    pub participations: i32,
+    pub role: String
 }

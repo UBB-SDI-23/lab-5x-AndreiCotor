@@ -67,6 +67,13 @@ pub fn get_number_of_submissions_by_uid(db: &mut Mockable<DbConn>, usid: i32) ->
     }
 }
 
+pub fn delete_all_submissions(db: &mut Mockable<DbConn>) -> QueryResult<usize> {
+    match db {
+        Mockable::Real(inner) => real::delete_all_submissions(inner),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
 mod real {
     use diesel::prelude::*;
     use crate::model::dto::pagination_dto::PaginationDTO;
@@ -122,6 +129,10 @@ mod real {
 
     pub fn delete_submission(db: &mut PgConnection, sid: i32) -> QueryResult<usize> {
         diesel::delete(submissions.filter(id.eq(sid))).execute(db)
+    }
+
+    pub fn delete_all_submissions(db: &mut PgConnection) -> QueryResult<usize> {
+        diesel::delete(submissions).execute(db)
     }
 
     pub fn update_submission(db: &mut PgConnection, sub: Submission) -> QueryResult<usize> {

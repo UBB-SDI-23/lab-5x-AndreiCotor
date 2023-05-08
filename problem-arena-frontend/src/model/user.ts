@@ -46,5 +46,6 @@ export interface UserPageDTO {
     problems_proposed: number,
     contests_created: number,
     submissions_sent: number,
-    participations: number
+    participations: number,
+    role: string
 }

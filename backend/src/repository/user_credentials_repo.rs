@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use crate::model::user_credentials::{InsertableUserCredentials, NewUserCredentials, UserCredentials};
+use crate::model::user_credentials::{InsertableUserCredentials, NewUserCredentials, UpdateRoleCredentials, UserCredentials};
 use crate::repository::{DbConn, DbError};
 use crate::schema::usercredentials::username;
 use crate::utils::mock::Mockable;
@@ -39,9 +39,16 @@ pub fn get_user_credentials_by_uuid(db: &mut Mockable<DbConn>, cuuid: String) ->
     }
 }
 
+pub fn update_user_credentials_role(db: &mut Mockable<DbConn>, uc: UpdateRoleCredentials) -> QueryResult<usize> {
+    match db {
+        Mockable::Real(inner) => real::update_user_credentials_role(inner, uc),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
 mod real {
     use diesel::prelude::*;
-    use crate::model::user_credentials::{InsertableUserCredentials, NewUserCredentials, UserCredentials};
+    use crate::model::user_credentials::{InsertableUserCredentials, NewUserCredentials, UpdateRoleCredentials, UserCredentials};
     use crate::repository::DbError;
     use crate::schema::usercredentials::dsl::*;
 
@@ -52,6 +59,12 @@ mod real {
     }
 
     pub fn update_user_credentials(db: &mut PgConnection, uc: UserCredentials) -> QueryResult<usize> {
+        diesel::update(usercredentials.filter(id.eq(uc.id)))
+            .set(uc)
+            .execute(db)
+    }
+
+    pub fn update_user_credentials_role(db: &mut PgConnection, uc: UpdateRoleCredentials) -> QueryResult<usize> {
         diesel::update(usercredentials.filter(id.eq(uc.id)))
             .set(uc)
             .execute(db)

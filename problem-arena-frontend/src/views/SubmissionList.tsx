@@ -11,7 +11,7 @@ export default function SubmissionList() {
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
     const navigate = useNavigate();
-    const { authContext, setAuthContext } = useContext(AuthContext);
+    const { authContext } = useContext(AuthContext);
 
     useEffect(() => {
         SubmissionService.getSubmissions(pagination).then((res) => {

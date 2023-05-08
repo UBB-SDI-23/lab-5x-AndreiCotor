@@ -1,5 +1,4 @@
 import {useEffect, useState} from "react";
-import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {PaginationDTO} from "../model/PaginationDTO";
 import {UserSubmissionsDTO} from "../model/user";
@@ -9,7 +8,6 @@ export default function UserList() {
     const [userList, setUserList] = useState<UserSubmissionsDTO[]>([]);
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
-    const navigate = useNavigate();
 
     useEffect(() => {
         UserService.getUsers(pagination).then((res) => {

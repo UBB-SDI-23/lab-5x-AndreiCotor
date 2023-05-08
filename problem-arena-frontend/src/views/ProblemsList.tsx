@@ -14,7 +14,7 @@ export default function ProblemsList() {
     const [page, setPage] = useState<number>(1);
     const [numPages, setNumPages] = useState<number>(10);
     const navigate = useNavigate();
-    const { authContext, setAuthContext } = useContext(AuthContext);
+    const { authContext } = useContext(AuthContext);
 
     useEffect(() => {
         ProblemsService.getProblems(pagination, filter).then((res) => {

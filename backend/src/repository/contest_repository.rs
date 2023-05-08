@@ -60,6 +60,13 @@ pub fn get_number_of_contests_by_uid(db: &mut Mockable<DbConn>, usid: i32) -> Qu
     }
 }
 
+pub fn delete_all_contests(db: &mut Mockable<DbConn>) -> QueryResult<usize> {
+    match db {
+        Mockable::Real(inner) => real::delete_all_contests(inner),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
 mod real {
     use diesel::prelude::*;
     use crate::model::contest::{Contest, NewContest, UpdContest};
@@ -117,6 +124,10 @@ mod real {
 
     pub fn delete_contest(db: &mut PgConnection, cid: i32) {
         diesel::delete(contest.filter(id.eq(cid))).execute(db).unwrap();
+    }
+
+    pub fn delete_all_contests(db: &mut PgConnection) -> QueryResult<usize> {
+        diesel::delete(contest).execute(db)
     }
 
     pub fn update_contest(db: &mut PgConnection, con: UpdContest) {

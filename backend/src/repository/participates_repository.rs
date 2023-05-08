@@ -67,6 +67,13 @@ pub fn get_number_of_participation_by_uid(db: &mut Mockable<DbConn>, usid: i32) 
     }
 }
 
+pub fn delete_all_participations(db: &mut Mockable<DbConn>) -> QueryResult<usize> {
+    match db {
+        Mockable::Real(inner) => real::delete_all_participations(inner),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
 mod real {
     use diesel::prelude::*;
     use crate::model::dto::pagination_dto::ParticipationPaginationDTO;
@@ -125,6 +132,10 @@ mod real {
 
     pub fn delete_participation(db: &mut PgConnection, usid: i32, coid: i32) -> QueryResult<usize> {
         diesel::delete(participates.filter(uid.eq(usid)).filter(cid.eq(coid))).execute(db)
+    }
+
+    pub fn delete_all_participations(db: &mut PgConnection) -> QueryResult<usize> {
+        diesel::delete(participates).execute(db)
     }
 
     pub fn update_participation(db: &mut PgConnection, part: Participates) -> QueryResult<usize> {

@@ -118,7 +118,8 @@ async fn get_user_by_id(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
             problems_proposed: problems,
             contests_created: contests,
             submissions_sent: submissions,
-            participations
+            participations,
+            role: uc.role
         }
     }).await.unwrap();
 
