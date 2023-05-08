@@ -8,6 +8,7 @@ export default function ContestDetailsForm() {
     const { id } = useParams();
     const [name, setName] = useState<string>("");
     const [description, setDescription] = useState<string>("");
+    const [error, setError] = useState<string>("");
 
     useEffect(() => {
         if (id !== undefined) {
@@ -15,7 +16,7 @@ export default function ContestDetailsForm() {
                 let contest = res.data;
                 setName(contest.name);
                 setDescription(contest.description);
-            });
+            }).catch((res) => setError("An error has occurred!"));
         }
     }, [id]);
 
@@ -28,14 +29,10 @@ export default function ContestDetailsForm() {
             };
 
             ContestService.updateContest(contest).then((res) => {
-                if (res.status !== 200) {
-                    alert(res.statusText);
-                }
-                else {
-                    alert("Contest was updated successfully!");
-                    navigate(-1);
-                }
-            })
+                navigate(-1);
+            }).catch((res) => {
+                setError("An error has occurred!")
+            });
         }
         else {
             const contest: NewContest = {
@@ -44,14 +41,10 @@ export default function ContestDetailsForm() {
             };
 
             ContestService.addContest(contest).then((res) => {
-                if (res.status !== 200) {
-                    alert(res.statusText);
-                }
-                else {
-                    alert("Contest was added successfully!");
-                    navigate(-1);
-                }
-            })
+                navigate(-1);
+            }).catch((res) => {
+                setError("An error has occurred!")
+            });
         }
     }
 
@@ -60,6 +53,7 @@ export default function ContestDetailsForm() {
             <h1 className="title">{id != null? "Edit Contest": "Create Contest"}</h1>
             <div className="columns">
                 <div className="column is-half-desktop">
+                    <p className="has-text-danger">{error}</p>
                     <div className="field">
                         <label className="label">Name</label>
                         <div className="control">

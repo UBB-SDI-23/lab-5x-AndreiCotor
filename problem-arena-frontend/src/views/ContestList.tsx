@@ -11,6 +11,7 @@ export default function ContestList() {
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
     const navigate = useNavigate();
+    const [error, setError] = useState<string>("");
     const { authContext } = useContext(AuthContext);
 
     useEffect(() => {
@@ -18,7 +19,7 @@ export default function ContestList() {
             if (res.data.length > 0) {
                 setContestList(res.data);
             }
-        })
+        }).catch((res) => setError("An error has occurred!"))
     }, [value, pagination]);
 
     function forceUpdate() {
@@ -27,7 +28,12 @@ export default function ContestList() {
 
     const deleteContest = async (id: string) => {
         if (window.confirm("Are you sure you want to delete this entry?")) {
-            await ContestService.deleteContest(id);
+            try {
+                await ContestService.deleteContest(id);
+            }
+            catch (err) {
+                setError("An error has occurred!");
+            }
             forceUpdate();
         }
     }
@@ -56,6 +62,7 @@ export default function ContestList() {
                     </button>): null}
                 </div>
             </div>
+            <p className="has-text-danger">{error}</p>
             <Table columns={["Name", "Participants"]}
                    properties={["name", "cnt"]}
                    elements={contestList}

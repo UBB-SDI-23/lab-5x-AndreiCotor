@@ -8,12 +8,15 @@ export default function UserList() {
     const [userList, setUserList] = useState<UserSubmissionsDTO[]>([]);
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
+    const [error, setError] = useState<string>("");
 
     useEffect(() => {
         UserService.getUsers(pagination).then((res) => {
             if (res.data.length > 0) {
                 setUserList(res.data);
             }
+        }).catch((res) => {
+            setError("An error has occurred")
         })
     }, [value, pagination]);
 
@@ -23,7 +26,12 @@ export default function UserList() {
 
     const deleteUser = async (id: string) => {
         if (window.confirm("Are you sure you want to delete this entry?")) {
-            await UserService.deleteUser(id);
+            try {
+                await UserService.deleteUser(id);
+            }
+            catch (err) {
+                setError("An error has occurred");
+            }
             forceUpdate();
         }
     }
@@ -47,6 +55,7 @@ export default function UserList() {
                     <h1 className="title">User List</h1>
                 </div>
             </div>
+            <p className="has-text-danger">{error}</p>
             <Table columns={["First Name", "Last Name", "School", "Teacher", "Submissions"]}
                    properties={["first_name", "last_name", "school", "teacher", "cnt"]}
                    elements={userList}

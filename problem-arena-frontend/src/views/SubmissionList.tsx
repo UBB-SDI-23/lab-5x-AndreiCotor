@@ -11,6 +11,7 @@ export default function SubmissionList() {
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
     const navigate = useNavigate();
+    const [error, setError] = useState<string>("");
     const { authContext } = useContext(AuthContext);
 
     useEffect(() => {
@@ -28,7 +29,7 @@ export default function SubmissionList() {
                     }
                 }));
             }
-        })
+        }).catch((res) => setError("An error has occurred!"))
     }, [value, pagination]);
 
     function forceUpdate() {
@@ -37,7 +38,12 @@ export default function SubmissionList() {
 
     const deleteSubmission = async (id: string) => {
         if (window.confirm("Are you sure you want to delete this entry?")) {
-            await SubmissionService.deleteSubmission(id);
+            try {
+                await SubmissionService.deleteSubmission(id);
+            }
+            catch (err) {
+                setError("An error has occurred!");
+            }
             forceUpdate();
         }
     }
@@ -66,6 +72,7 @@ export default function SubmissionList() {
                     </button>): null}
                 </div>
             </div>
+            <p className="has-text-danger">{error}</p>
             <Table columns={["Score", "Language", "Problem"]}
                    properties={["score", "language", "problem"]}
                    elements={submissionList}

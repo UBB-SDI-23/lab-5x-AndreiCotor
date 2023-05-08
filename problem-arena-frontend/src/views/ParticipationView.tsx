@@ -12,13 +12,16 @@ export default function ParticipationView() {
     const [participation, setParticipation] = useState<Participation>();
     const [user, setUser] = useState<User>();
     const [contest, setContest] = useState<Contest>();
+    const [error, setError] = useState<string>("");
 
     useEffect(() => {
         if (uid !== undefined) {
             ParticipationService.getParticipation(uid + "/" + cid).then((res) => setParticipation(res.data));
-            UserService.getUser(uid).then((res) => setUser(res.data));
+            UserService.getUser(uid).then((res) => setUser(res.data))
+                .catch((res) => setError("An error has occurred!"));
             if (cid !== undefined) {
-                ContestService.getContest(cid).then((res) => setContest(res.data));
+                ContestService.getContest(cid).then((res) => setContest(res.data))
+                    .catch((res) => setError("An error has occurred!"));
             }
         }
     }, [uid, cid]);
@@ -27,6 +30,7 @@ export default function ParticipationView() {
         <div>
             <h1 className="title">Participation</h1>
             <h2 className="subtitle">General Information</h2>
+            <p className="has-text-danger">{error}</p>
             <table className="table is-fullwidth">
                 <thead>
                 <tr>

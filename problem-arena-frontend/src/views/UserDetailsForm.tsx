@@ -14,6 +14,7 @@ export default function UserDetailsForm() {
     const [bio, setBio] = useState<string>("");
     const [teacher, setTeacher] = useState<string>("");
     const [role, setRole] = useState<string>("");
+    const [error, setError] = useState<string>("");
     const { authContext } = useContext(AuthContext);
 
     useEffect(() => {
@@ -33,7 +34,10 @@ export default function UserDetailsForm() {
     function submit() {
         if (id != null) {
             if (authContext && authContext.role === "admin") {
-                AdminService.changeRole(Number(id), role).then(() => {navigate(-1)});
+                AdminService.changeRole(Number(id), role).then(() => {navigate(-1)})
+                    .catch((res) => {
+                        setError("An error has occurred!");
+                    });
             }
 
             const user: User = {
@@ -46,13 +50,9 @@ export default function UserDetailsForm() {
             };
 
             UserService.updateUser(user).then((res) => {
-                if (res.status !== 200) {
-                    alert(res.statusText);
-                }
-                else {
-                    alert("User was updated successfully!");
-                    navigate(-1);
-                }
+                navigate(-1);
+            }).catch((res) => {
+                setError("An error has occurred!")
             })
         }
         else {
@@ -65,14 +65,10 @@ export default function UserDetailsForm() {
             };
 
             UserService.addUser(user).then((res) => {
-                if (res.status !== 200) {
-                    alert(res.statusText);
-                }
-                else {
-                    alert("User was added successfully!");
-                    navigate(-1);
-                }
-            })
+                navigate(-1);
+            }).catch((res) => {
+                setError("An error has occurred!");
+            });
         }
     }
 
@@ -81,6 +77,7 @@ export default function UserDetailsForm() {
             <h1 className="title">{id != null? "Edit User": "Create User"}</h1>
             <div className="columns">
                 <div className="column is-half-desktop">
+                    <p className="has-text-danger">{error}</p>
                     {(authContext && authContext.role === "admin")?
                         (<div className="field">
                             <label className="label">Role</label>

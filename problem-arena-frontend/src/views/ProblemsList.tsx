@@ -14,17 +14,16 @@ export default function ProblemsList() {
     const [page, setPage] = useState<number>(1);
     const [numPages, setNumPages] = useState<number>(10);
     const navigate = useNavigate();
+    const [error, setError] = useState<string>("");
     const { authContext } = useContext(AuthContext);
 
     useEffect(() => {
         ProblemsService.getProblems(pagination, filter).then((res) => {
-            if (res.data.length > 0) {
-                setProblemList(res.data);
-            }
-        });
+            setProblemList(res.data);
+        }).catch((res) => setError("An error has occurred!"));
         ProblemsService.getNumberOfProblems().then((res) => {
             setNumPages(Math.ceil(res.data / 10.0));
-        })
+        }).catch((res) => setError("An error has occurred!"));
     }, [value, pagination, filter]);
 
     function forceUpdate() {
@@ -33,7 +32,12 @@ export default function ProblemsList() {
 
     const deleteProblem = async (id: string) => {
         if (window.confirm("Are you sure you want to delete this entry?")) {
-            await ProblemsService.deleteProblem(id);
+            try {
+                await ProblemsService.deleteProblem(id);
+            }
+            catch (err) {
+                setError("An error has occurred!");
+            }
             forceUpdate();
         }
     }
@@ -163,6 +167,7 @@ export default function ProblemsList() {
                     />
                 </div>
             </div>
+            <p className="has-text-danger">{error}</p>
             <Table columns={["Name", "Author", "Contest", "Rating", "Submissions"]}
                    properties={["name", "author", "contest", "rating", "cnt"]}
                    elements={problemList}

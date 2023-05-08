@@ -28,7 +28,7 @@ export default function LoginForm() {
                 }
             }
             else {
-                setErrors({general: err.response.statusText});
+                setErrors({general: "An error has occurred!"});
             }
         }
     }

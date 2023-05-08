@@ -9,6 +9,7 @@ import {AuthContext} from "../contexts/AuthContext";
 export default function ParticipationList() {
     const [participationList, setParticipationList] = useState<ParticipationWithName[]>([]);
     const [value, setValue] = useState<number>(0);
+    const [error, setError] = useState<string>("");
     const [pagination, setPagination] = useState<ParticipationPaginationDTO>({
         first_uid: -1,
         first_cid: -1,
@@ -18,7 +19,7 @@ export default function ParticipationList() {
         direction: 1
     });
     const navigate = useNavigate();
-    const { authContext, setAuthContext } = useContext(AuthContext);
+    const { authContext } = useContext(AuthContext);
 
     useEffect(() => {
         ParticipationService.getParticipations(pagination).then((res) => {
@@ -34,6 +35,8 @@ export default function ParticipationList() {
                     }
                 }));
             }
+        }).catch((res) => {
+            setError("An error has occurred!");
         })
     }, [value, pagination]);
 
@@ -43,7 +46,12 @@ export default function ParticipationList() {
 
     const deleteParticipation = async (id: string) => {
         if (window.confirm("Are you sure you want to delete this entry?")) {
-            await ParticipationService.deleteParticipation(id);
+            try {
+                await ParticipationService.deleteParticipation(id);
+            }
+            catch (err) {
+                setError("An error has occurred!");
+            }
             forceUpdate();
         }
     }
@@ -95,6 +103,7 @@ export default function ParticipationList() {
                     </button>): null}
                 </div>
             </div>
+            <p className="has-text-danger">{error}</p>
             <Table columns={["Official", "Score", "Contest"]}
                    properties={["official", "score", "contest"]}
                    elements={participationsWithURLid}
