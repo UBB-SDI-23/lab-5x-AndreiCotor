@@ -6,16 +6,17 @@ export default function AdminPanel() {
     const [active, setActive] = useState<boolean>(true);
 
     const submit = (table: string) => {
-        AdminService.deleteAllFromTable(table).then((res) => {
-            if (res.status) {
-                setInfo("Table deleted successfully");
-            }
-            else {
+        if (window.confirm("Are you sure you want to delete all the data from " + table + "?")) {
+            AdminService.deleteAllFromTable(table).then((res) => {
+                if (res.status) {
+                    setInfo("Table deleted successfully");
+                } else {
+                    setInfo("An error has occurred");
+                }
+            }).catch((res) => {
                 setInfo("An error has occurred");
-            }
-        }).catch((res) => {
-            setInfo("An error has occurred");
-        })
+            })
+        }
     }
 
     const populate = () => {

@@ -29,7 +29,7 @@ export default function SubmissionDetailsForm() {
     const [userList, setUserList] = useState<User[]>([]);
     const [problemList, setProblemList] = useState<Problem[]>([]);
     const [errors, setErrors] = useState<any>({});
-    const { authContext, setAuthContext } = useContext(AuthContext);
+    const { authContext } = useContext(AuthContext);
 
     useEffect(() => {
         if (id !== undefined) {
@@ -73,14 +73,8 @@ export default function SubmissionDetailsForm() {
             };
 
             SubmissionService.updateSubmission(submission).then((res) => {
-                if (res.status !== 200) {
-                    alert(res.statusText);
-                }
-                else {
-                    alert("Submission was updated successfully!");
-                    navigate(-1);
-                }
-            })
+                navigate(-1);
+            }).then((res) => setErrors({general: "An error has occurred!"}))
         }
         else {
             const submission: NewSubmission = {
@@ -92,14 +86,8 @@ export default function SubmissionDetailsForm() {
             };
 
             SubmissionService.addSubmission(submission).then((res) => {
-                if (res.status !== 200) {
-                    alert(res.statusText);
-                }
-                else {
-                    alert("Submission was added successfully!");
-                    navigate(-1);
-                }
-            })
+                navigate(-1);
+            }).then((res) => setErrors({general: "An error has occurred!"}))
         }
     }
 
@@ -144,6 +132,7 @@ export default function SubmissionDetailsForm() {
             <h1 className="title">{id != null? "Edit Submission": "Create Submission"}</h1>
             <div className="columns">
                 <div className="column is-half-desktop">
+                    {errors["general"]? (<p className="has-text-danger">{errors["general"]}</p>) : null}
                     {(authContext && authContext.role === "regular")? null : (
                         <nav className="panel">
                             <p className="panel-heading">
@@ -165,7 +154,7 @@ export default function SubmissionDetailsForm() {
                               </span>
                                 </p>
                             </div>
-                            {userNameList}
+                            {(userNameList.length > 0) ? userNameList : (<p>No data to show.</p>)}
 
                             <div className="panel-block">
                                 <p>Selected user: {selectedUserName} </p>
@@ -191,7 +180,7 @@ export default function SubmissionDetailsForm() {
                               </span>
                             </p>
                         </div>
-                        {problemNameList}
+                        {(problemNameList.length > 0) ? problemNameList : (<p>No data to show.</p>)}
                         <div className="panel-block">
                             <p>Selected problem: {selectedProblem} </p>
                         </div>

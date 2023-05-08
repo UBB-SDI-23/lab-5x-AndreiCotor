@@ -15,7 +15,7 @@ let timerIDU: string | number | NodeJS.Timeout | undefined;
 let timerIDC: string | number | NodeJS.Timeout | undefined;
 
 export default function ParticipatesDetailsForm() {
-    const { authContext, setAuthContext } = useContext(AuthContext);
+    const { authContext } = useContext(AuthContext);
     const navigate = useNavigate();
     const { uid, cid } = useParams();
     const [userId, setUserId] = useState<number>(-1);
@@ -60,13 +60,9 @@ export default function ParticipatesDetailsForm() {
             };
 
             ParticipationService.updateParticipation(participation).then((res) => {
-                if (res.status !== 200) {
-                    alert(res.statusText);
-                }
-                else {
-                    alert("Participation was updated successfully!");
-                    navigate(-1);
-                }
+                navigate(-1);
+            }).catch((res) => {
+                setErrors({general: "An error has occurred!"});
             })
         }
         else {
@@ -86,13 +82,9 @@ export default function ParticipatesDetailsForm() {
             };
 
             ParticipationService.addParticipation(participation).then((res) => {
-                if (res.status !== 200) {
-                    alert(res.statusText);
-                }
-                else {
-                    alert("Participation was added successfully!");
-                    navigate(-1);
-                }
+                navigate(-1);
+            }).catch((res) => {
+                setErrors({general: "An error has occurred!"});
             })
         }
     }
@@ -140,6 +132,7 @@ export default function ParticipatesDetailsForm() {
             <h1 className="title">{uid != null? "Edit Participation": "Create Participation"}</h1>
             <div className="columns">
                 <div className="column is-half-desktop">
+                    {errors["general"]? (<p className="has-text-danger">{errors["general"]}</p>) : null}
                     { (uid != null || (authContext && authContext.role === "regular"))? null: (
                         <nav className="panel">
                             <p className="panel-heading">
@@ -161,7 +154,7 @@ export default function ParticipatesDetailsForm() {
                               </span>
                                 </p>
                             </div>
-                            {userNameList}
+                            {(userNameList.length > 0)? userNameList: (<p>No data to show.</p>)}
 
                             <div className="panel-block">
                                 <p>Selected user: {selectedUserName} </p>
@@ -186,7 +179,7 @@ export default function ParticipatesDetailsForm() {
                                     </span>
                                 </p>
                             </div>
-                            {contestNameList}
+                            {(contestNameList.length > 0)? contestNameList: (<p>No data to show.</p>)}
                             <div className="panel-block">
                                 <p>Selected contest: {selectedContest} </p>
                             </div>

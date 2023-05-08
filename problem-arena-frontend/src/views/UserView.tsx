@@ -11,10 +11,12 @@ export default function UserView() {
     const navigate = useNavigate();
     const [user, setUser] = useState<UserPageDTO>();
     const { authContext } = useContext(AuthContext);
+    const [error, setError] = useState<string>("");
 
     useEffect(() => {
         if (id !== undefined) {
             UserService.getUser(id).then((res) => setUser(res.data))
+                .catch((res) => setError("An error has occurred!"));
         }
     }, [id]);
 
@@ -27,6 +29,7 @@ export default function UserView() {
                     <FontAwesomeIcon icon={faPenToSquare} />
                 </button>)
             }
+            <p className="has-text-danger">{error}</p>
             <table className="table is-fullwidth">
                 <thead>
                 <tr>

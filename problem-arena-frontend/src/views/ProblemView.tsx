@@ -7,10 +7,12 @@ import RatingDisplay from "../components/RatingDisplay";
 export default function ProblemView() {
     const { id } = useParams();
     const [problem, setProblem] = useState<Problem>();
+    const [error, setError] = useState<string>("");
 
     useEffect(() => {
         if (id !== undefined) {
             ProblemsService.getProblem(id).then((res) => setProblem(res.data))
+                .catch((res) => setError("An error has occurred!"))
         }
     }, [id]);
 
@@ -18,6 +20,7 @@ export default function ProblemView() {
         <div>
             <h1 className="title">{problem?.name}</h1>
             <h2 className="subtitle">General Information</h2>
+            <p className="has-text-danger">{error}</p>
             <table className="table is-fullwidth">
                 <thead>
                     <tr>

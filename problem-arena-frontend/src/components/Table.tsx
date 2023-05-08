@@ -18,7 +18,7 @@ interface TableProps {
 
 export default function Table(props: TableProps) {
     const navigate = useNavigate();
-    const { authContext, setAuthContext } = useContext(AuthContext);
+    const { authContext } = useContext(AuthContext);
 
     function extractObjectProperties(properties: string[], obj: any) {
         let tsx_list = properties.map((prop) => {
@@ -80,7 +80,7 @@ export default function Table(props: TableProps) {
                 </tr>
                 </thead>
                 <tbody>
-                    {tableRows}
+                    {(tableRows.length > 0)? tableRows: (<p>No data to show.</p>)}
                 </tbody>
             </table>
         </div>
