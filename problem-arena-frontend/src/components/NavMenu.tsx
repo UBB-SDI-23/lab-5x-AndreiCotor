@@ -1,4 +1,9 @@
+import {useContext} from "react";
+import {AuthContext} from "../contexts/AuthContext";
+
 export default function NavMenu() {
+    const {authContext} = useContext(AuthContext);
+
     return (
         <aside className="menu">
             <p className="menu-label">General</p>
@@ -17,6 +22,9 @@ export default function NavMenu() {
                     <li><a href="/users-by-participation">Users increasing by participations</a></li>
                 </ul></li>
                 <li><a href="/participations">Participations</a></li>
+                {(authContext && authContext.role === "admin")?
+                    (<li><a href="/admin">Admin</a></li>): null
+                }
             </ul>
         </aside>
     );

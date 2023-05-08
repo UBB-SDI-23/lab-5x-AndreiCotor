@@ -1,5 +1,4 @@
 import {useEffect, useState} from "react";
-import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {StatisticPagination} from "../model/PaginationDTO";
 import {UserReportDTO} from "../model/user";
@@ -9,7 +8,6 @@ export default function UserListByParticipations() {
     const [userList, setUserList] = useState<UserReportDTO[]>([]);
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<StatisticPagination>({first_id: -1, first_stat: -1, last_id: 0, last_stat: 0, limit: 10, direction: 1});
-    const navigate = useNavigate();
 
     useEffect(() => {
         UserService.getProblemsByParticipations(pagination).then((res) => {

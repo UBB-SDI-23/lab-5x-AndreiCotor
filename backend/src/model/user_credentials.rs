@@ -29,3 +29,10 @@ pub struct InsertableUserCredentials {
     pub password: String,
     pub uuid: String
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, AsChangeset)]
+#[diesel(table_name = usercredentials)]
+pub struct UpdateRoleCredentials {
+    pub id: i32,
+    pub role: String
+}

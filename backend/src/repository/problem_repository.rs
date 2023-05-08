@@ -90,6 +90,13 @@ pub fn get_number_of_problems_by_uid(db: &mut Mockable<DbConn>, usid: i32) -> Qu
     }
 }
 
+pub fn delete_all_problems(db: &mut Mockable<DbConn>) -> QueryResult<usize> {
+    match db {
+        Mockable::Real(inner) => real::delete_all_problems(inner),
+        Mockable::Mock => panic!("Not implemented")
+    }
+}
+
 mod real {
     use diesel::prelude::*;
     use diesel::sql_query;
@@ -179,6 +186,10 @@ mod real {
 
     pub fn delete_problem(db: &mut PgConnection, pid: i32) {
         diesel::delete(problems.filter(id.eq(pid))).execute(db).unwrap();
+    }
+
+    pub fn delete_all_problems(db: &mut PgConnection) -> QueryResult<usize> {
+        diesel::delete(problems).execute(db)
     }
 
     pub fn update_problem(db: &mut PgConnection, problem: UpdProblem) {

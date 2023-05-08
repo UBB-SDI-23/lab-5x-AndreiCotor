@@ -1,14 +1,16 @@
 import {useNavigate, useParams} from "react-router-dom";
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import {UserPageDTO} from "../model/user";
 import {UserService} from "../services/user-service";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPenToSquare} from "@fortawesome/free-solid-svg-icons";
+import {AuthContext} from "../contexts/AuthContext";
 
 export default function UserView() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [user, setUser] = useState<UserPageDTO>();
+    const { authContext } = useContext(AuthContext);
 
     useEffect(() => {
         if (id !== undefined) {
@@ -20,9 +22,11 @@ export default function UserView() {
         <div>
             <h1 className="title">{user?.last_name}</h1>
             <h2 className="subtitle">General Information</h2>
-            <button className="button is-link ml-2" onClick={() => navigate( "/user/edit/" + id)}>
-                <FontAwesomeIcon icon={faPenToSquare} />
-            </button>
+            {(!authContext || !id || (authContext.role === "regular" && authContext.id !== Number(id)))? null :
+                (<button className="button is-link ml-2" onClick={() => navigate( "/user/edit/" + id)}>
+                    <FontAwesomeIcon icon={faPenToSquare} />
+                </button>)
+            }
             <table className="table is-fullwidth">
                 <thead>
                 <tr>

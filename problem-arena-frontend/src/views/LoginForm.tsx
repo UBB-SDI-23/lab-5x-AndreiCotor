@@ -8,7 +8,7 @@ export default function LoginForm() {
     const [username, serUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [errors, setErrors] = useState<any>({});
-    const { authContext, setAuthContext } = useContext(AuthContext);
+    const { setAuthContext } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const login = async () => {

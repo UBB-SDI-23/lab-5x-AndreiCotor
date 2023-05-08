@@ -1,7 +1,6 @@
 import {useEffect, useState} from "react";
 import {ProblemsService} from "../services/problems-service";
 import {ProblemStatisticsDTO} from "../model/problem";
-import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {StatisticPagination} from "../model/PaginationDTO";
 
@@ -9,7 +8,6 @@ export default function ProblemListBySuccessRate() {
     const [problemList, setProblemList] = useState<ProblemStatisticsDTO[]>([]);
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<StatisticPagination>({first_id: -1, first_stat: -1, last_id: 0, last_stat: 0, limit: 10, direction: 1});
-    const navigate = useNavigate();
 
     useEffect(() => {
         ProblemsService.getProblemsBySuccessRate(pagination).then((res) => {

@@ -2,7 +2,7 @@ import {useContext, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {PaginationDTO} from "../model/PaginationDTO";
-import {ContestDTO, ContestWithCreatorDTO} from "../model/contest";
+import {ContestWithCreatorDTO} from "../model/contest";
 import {ContestService} from "../services/contest-service";
 import {AuthContext} from "../contexts/AuthContext";
 
@@ -11,7 +11,7 @@ export default function ContestList() {
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
     const navigate = useNavigate();
-    const { authContext, setAuthContext } = useContext(AuthContext);
+    const { authContext } = useContext(AuthContext);
 
     useEffect(() => {
         ContestService.getContests(pagination).then((res) => {

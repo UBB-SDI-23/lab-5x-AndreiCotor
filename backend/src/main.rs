@@ -9,10 +9,11 @@ use crate::controller::problem_controller::{problem_config, problem_restricted};
 use crate::controller::user_controller::{user_config, user_restricted};
 use crate::controller::submission_controller::{submission_config, submission_restricted};
 use diesel::r2d2::ConnectionManager;
+use crate::controller::admin_controller::admin_config;
 use crate::controller::authentication_controller::authentication_config;
 use crate::controller::contest_controller::{contest_config, contest_restricted};
 use crate::controller::participates_controller::{participates_config, participates_restricted};
-use crate::middleware::authentication_validator;
+use crate::middleware::{admin_authentication_validator, authentication_validator};
 use crate::utils::mock::MockablePool;
 
 // r2d2 Pool is already included in the definition
@@ -54,7 +55,11 @@ async fn main() -> std::io::Result<()> {
                 .configure(user_restricted)
                 .configure(submission_restricted)
                 .configure(contest_restricted)
-                .configure(participates_restricted))
+                .configure(participates_restricted)
+                .service(web::scope("")
+                    .wrap(HttpAuthentication::bearer(admin_authentication_validator))
+                    .configure(admin_config)
+                ))
     }).bind(("127.0.0.1", 8000))?
         .run().await
 }
