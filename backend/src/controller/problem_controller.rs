@@ -10,7 +10,7 @@ use crate::middleware::authentication_validator;
 use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
 use crate::model::dto::problem_dto::{ProblemByOtherSolvedProblemsDTO, ProblemDTO, ProblemStatisticsDTO, ProblemWithCreatorDTO};
 use crate::model::dto::token_claims::TokenClaims;
-use crate::repository::{problem_repository, submission_repository, user_credentials_repo, users_repo};
+use crate::repository::{pagination_options_repo, problem_repository, submission_repository, user_credentials_repo, users_repo};
 
 #[derive(Deserialize)]
 pub struct RatingQuery {
@@ -125,7 +125,8 @@ async fn all_problems(pool: Data<DbPool>, query: web::Query<RatingQuery>) -> Htt
 async fn problem_number(pool: Data<DbPool>) -> HttpResponse {
     let res = web::block(move || {
         let mut conn = pool.get().unwrap();
-        problem_repository::number_of_problems(&mut conn).unwrap()
+        let entities_per_page = pagination_options_repo::get_number_of_pages(&mut conn).unwrap().unwrap().pages;
+        (problem_repository::number_of_problems(&mut conn).unwrap() + entities_per_page - 1) / entities_per_page
     }).await.unwrap();
 
     HttpResponse::Ok().json(res)
@@ -135,9 +136,13 @@ async fn problem_number(pool: Data<DbPool>) -> HttpResponse {
 async fn all_problems(pool: Data<DbPool>, query: web::Query<RatingQuery>) -> HttpResponse {
     let mut problems = web::block(move || {
         let mut conn = pool.get().unwrap();
-        let problems = match query.rating {
-            Some(rating) => problem_repository::get_problems_rating_larger(&mut conn, rating, query.to_pagination()),
-            None => problem_repository::get_problems_paginated(&mut conn, query.to_pagination())
+        let data = query.into_inner();
+        let mut pagination = data.to_pagination();
+        pagination.limit = pagination_options_repo::get_number_of_pages(&mut conn).unwrap().unwrap().pages;
+
+        let problems = match data.rating {
+            Some(rating) => problem_repository::get_problems_rating_larger(&mut conn, rating, pagination),
+            None => problem_repository::get_problems_paginated(&mut conn, pagination)
         }.unwrap();
 
         let mut res = vec![];

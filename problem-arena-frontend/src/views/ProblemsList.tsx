@@ -22,7 +22,7 @@ export default function ProblemsList() {
             setProblemList(res.data);
         }).catch((res) => setError("An error has occurred!"));
         ProblemsService.getNumberOfProblems().then((res) => {
-            setNumPages(Math.ceil(res.data / 10.0));
+            setNumPages(res.data);
         }).catch((res) => setError("An error has occurred!"));
     }, [value, pagination, filter]);
 

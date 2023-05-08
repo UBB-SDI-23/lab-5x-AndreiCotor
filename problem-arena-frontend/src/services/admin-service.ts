@@ -12,5 +12,9 @@ export const AdminService = {
 
     runGenerate: () => {
         axiosConfigured.get("/run-generate", {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
+    },
+
+    setPagOpt: (nr: number): Promise<AxiosResponse> => {
+        return axiosConfigured.put("/update-pagination", {id: 1, pages: nr}, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     }
 }

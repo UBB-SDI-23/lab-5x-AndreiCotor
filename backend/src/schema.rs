@@ -10,6 +10,13 @@ diesel::table! {
 }
 
 diesel::table! {
+    pagoptions (id) {
+        id -> Int4,
+        pages -> Int4,
+    }
+}
+
+diesel::table! {
     participates (uid, cid) {
         uid -> Int4,
         cid -> Int4,
@@ -73,6 +80,7 @@ diesel::joinable!(submissions -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     contest,
+    pagoptions,
     participates,
     problems,
     submissions,

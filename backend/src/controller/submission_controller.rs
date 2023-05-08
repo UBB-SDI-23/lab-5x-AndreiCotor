@@ -7,7 +7,7 @@ use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::model::dto::submission_dto::{SubmissionDTO, SubmissionReportDTO};
 use crate::model::dto::token_claims::TokenClaims;
 use crate::model::submission::{NewSubmission, Submission};
-use crate::repository::{problem_repository, submission_repository, users_repo};
+use crate::repository::{pagination_options_repo, problem_repository, submission_repository, users_repo};
 
 pub fn submission_config(cfg: &mut web::ServiceConfig) {
     cfg.service(all_submissions)
@@ -44,7 +44,10 @@ async fn add_submission(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims
 async fn all_submissions(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> HttpResponse {
     let mut submissions = web::block(move || {
         let mut conn = pool.get().unwrap();
-        let submissions = submission_repository::get_submissions_paginated(&mut conn, query.into_inner()).unwrap();
+        let mut pagination = query.into_inner();
+        pagination.limit = pagination_options_repo::get_number_of_pages(&mut conn).unwrap().unwrap().pages;
+
+        let submissions = submission_repository::get_submissions_paginated(&mut conn, pagination).unwrap();
 
         let mut res = vec![];
         for submission in submissions {

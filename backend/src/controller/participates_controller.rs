@@ -7,7 +7,7 @@ use crate::model::dto::pagination_dto::ParticipationPaginationDTO;
 use crate::model::dto::participates_dto::ParticipatesDTO;
 use crate::model::dto::token_claims::TokenClaims;
 use crate::model::participates::Participates;
-use crate::repository::{contest_repository, participates_repository, users_repo};
+use crate::repository::{contest_repository, pagination_options_repo, participates_repository, users_repo};
 
 pub fn participates_config(cfg: &mut web::ServiceConfig) {
     cfg.service(all_participates)
@@ -93,7 +93,10 @@ async fn update_participates(pool: Data<DbPool>, req_user: Option<ReqData<TokenC
 async fn all_participates(pool: Data<DbPool>, query: web::Query<ParticipationPaginationDTO>) -> HttpResponse {
     let participations = web::block(move || {
         let mut conn = pool.get().unwrap();
-        let participates = participates_repository::get_participation_paginated(&mut conn, query.into_inner()).unwrap();
+        let mut pagination = query.into_inner();
+        pagination.limit = pagination_options_repo::get_number_of_pages(&mut conn).unwrap().unwrap().pages;
+
+        let participates = participates_repository::get_participation_paginated(&mut conn, pagination).unwrap();
 
         let mut res = vec![];
         for part in participates {
