@@ -1,5 +1,6 @@
 use std::future::Future;
-use actix_web::{HttpResponse, web, put, delete};
+use std::process::Command;
+use actix_web::{HttpResponse, web, put, delete, get};
 use actix_web::web::{Data, Json};
 use diesel::QueryResult;
 use crate::DbPool;
@@ -11,7 +12,8 @@ pub fn admin_config(cfg: &mut web::ServiceConfig) {
         .service(delete_all_contests)
         .service(delete_all_participations)
         .service(delete_all_problems)
-        .service(delete_all_submissions);
+        .service(delete_all_submissions)
+        .service(run_generate);
 }
 
 #[put("/api/update-role")]
@@ -67,4 +69,17 @@ async fn delete_all_submissions(pool: Data<DbPool>) -> HttpResponse {
         Ok(_) => HttpResponse::Ok().finish(),
         Err(_) => HttpResponse::InternalServerError().finish()
     }
+}
+
+#[get("/api/run-generate")]
+async fn run_generate(_: Data<DbPool>) -> HttpResponse {
+    web::block(move || {
+        Command::new("sh")
+            .arg("-c")
+            .arg("sudo -u postgres psql -d infoarena -q -f ../../../data-generator/test.sql")
+            .output()
+            .expect("failed to execute process");
+    }).await.unwrap();
+
+    HttpResponse::Ok().finish()
 }

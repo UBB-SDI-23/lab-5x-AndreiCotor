@@ -22,6 +22,7 @@ export default function AdminPanel() {
     const populate = () => {
         setActive(false);
         setInfo("Running database populate scripts. This may take a while...")
+        AdminService.runGenerate();
     }
 
     return (

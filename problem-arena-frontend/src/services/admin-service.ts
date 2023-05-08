@@ -8,5 +8,9 @@ export const AdminService = {
 
     deleteAllFromTable: (table: string): Promise<AxiosResponse> => {
         return axiosConfigured.delete("/all-" + table, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
+    },
+
+    runGenerate: () => {
+        axiosConfigured.get("/run-generate", {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     }
 }
