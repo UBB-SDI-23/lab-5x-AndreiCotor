@@ -9,7 +9,7 @@ use crate::model::contest::{Contest, NewContest, UpdContest};
 use crate::model::dto::contest_dto::{ContestDTO, ContestWithCreatorDTO};
 use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::model::dto::token_claims::TokenClaims;
-use crate::repository::{contest_repository, participates_repository, user_credentials_repo};
+use crate::repository::{contest_repository, pagination_options_repo, participates_repository, user_credentials_repo};
 
 pub fn contest_config(cfg: &mut web::ServiceConfig) {
     cfg.service(get_contest_autocomplete)
@@ -82,7 +82,10 @@ async fn update_contest(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims
 async fn all_contests(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> HttpResponse {
     let mut contests = web::block(move || {
         let mut conn = pool.get().unwrap();
-        let contests = contest_repository::get_contests_paginated(&mut conn, query.into_inner()).unwrap();
+        let mut pagination = query.into_inner();
+        pagination.limit = pagination_options_repo::get_number_of_pages(&mut conn).unwrap().unwrap().pages;
+
+        let contests = contest_repository::get_contests_paginated(&mut conn, pagination).unwrap();
 
         let mut res = vec![];
         for contest in contests {

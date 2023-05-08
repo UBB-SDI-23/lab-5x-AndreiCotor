@@ -8,7 +8,7 @@ use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
 use crate::model::dto::token_claims::TokenClaims;
 use crate::model::dto::user_dto::{UserDTO, UserPageDTO, UserReportDTO, UserSubmissionsDTO};
 use crate::model::user::{NewUser, User};
-use crate::repository::{contest_repository, participates_repository, problem_repository, submission_repository, user_credentials_repo, users_repo};
+use crate::repository::{contest_repository, pagination_options_repo, participates_repository, problem_repository, submission_repository, user_credentials_repo, users_repo};
 
 pub fn user_config(cfg: &mut web::ServiceConfig) {
     cfg.service(all_users)
@@ -73,7 +73,10 @@ async fn update_user(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>,
 async fn all_users(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> HttpResponse {
     let mut users = web::block(move || {
         let mut conn = pool.get().unwrap();
-        let users = users_repo::get_users_paginated(&mut conn, query.into_inner()).unwrap();
+        let mut pagination = query.into_inner();
+        pagination.limit = pagination_options_repo::get_number_of_pages(&mut conn).unwrap().unwrap().pages;
+
+        let users = users_repo::get_users_paginated(&mut conn, pagination).unwrap();
 
         let mut res = vec![];
         for user in users {
