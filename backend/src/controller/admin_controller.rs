@@ -76,7 +76,7 @@ async fn run_generate(_: Data<DbPool>) -> HttpResponse {
     web::block(move || {
         Command::new("sh")
             .arg("-c")
-            .arg("sudo -u postgres psql -d infoarena -q -f ../../../data-generator/test.sql")
+            .arg("psql postgres://postgres:013551@localhost/infoarena -q -f ../../../data-generator/test.sql")
             .output()
             .expect("failed to execute process");
     }).await.unwrap();
