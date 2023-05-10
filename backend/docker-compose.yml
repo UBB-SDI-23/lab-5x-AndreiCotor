@@ -1,0 +1,30 @@
+version: '3'
+services:
+  webserver:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: always
+    volumes:
+      - ./nginx/conf/:/etc/nginx/conf.d/:ro
+      - ./certbot/www:/var/www/certbot/:ro
+  cloud_server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - './:/usr/src/problemarena'
+    links:
+      - db
+    ports:
+      - '8000:8000'
+    command: 'bash -c "diesel migration run && cargo run --release"'
+  db:
+    image: 'postgres:15.2-alpine'
+    environment:
+      - POSTGRES_DB=infoarena
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=013551
+    ports:
+      - '5432:5432'
