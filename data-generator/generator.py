@@ -5,10 +5,10 @@ fake = Faker()
 Faker.seed(0)
 fo = open("script.sql", "w")
 
-BATCH_SIZE = 1000
-NR_BATCHES_SIMPLE = 1000
-NR_BATCHES_RELATION = 10_000
-NR_USER_BATCHES = 10
+BATCH_SIZE = 10
+NR_BATCHES_SIMPLE = 2
+NR_BATCHES_RELATION = 2
+NR_USER_BATCHES = 2
 
 username_list = [fake.unique.user_name() for _ in range(10000)]
 uuid_list = [fake.unique.uuid4() for _ in range(10000)]
@@ -129,15 +129,19 @@ def generate_user_credentials(id: int, final):
     password = "$argon2id$v=19$m=19456,t=2,p=1$YW5kcmVpZWJvc3Nz$0SaZ1FIgsw6lEBAZfDW8aRrVrktwJ/vsF7YzFPF397I"
     confirmed = "true"
     uuid = uuid_list[id - 1]
+    role = "regular"
+    if username == "greenwilliam":
+        role = "admin"
     
-    fo.write("(" + str(id) + ", \'" + username + "\', \'" + password + "\', " + confirmed + ", \'" + uuid + "\')")
+
+    fo.write("(" + str(id) + ", \'" + username + "\', \'" + password + "\', " + confirmed + ", \'" + uuid + "\', \'" + role + "\')")
 
     if not final:
         fo.write(",")
 
 
 def generate_user_credentials_batch(start_id: int):
-    fo.write("INSERT INTO USERCREDENTIALS (id, username, password, confirmed, uuid) VALUES ")
+    fo.write("INSERT INTO USERCREDENTIALS (id, username, password, confirmed, uuid, role) VALUES ")
     for nr in range(BATCH_SIZE - 1):
         generate_user_credentials(start_id + nr, False)
 
