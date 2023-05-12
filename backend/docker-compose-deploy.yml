@@ -35,7 +35,7 @@ services:
       - ./nginx/options-ssl-nginx.conf:/etc/nginx/options-ssl-nginx.conf
       - ./nginx/ssl-dhparams.pem:/etc/nginx/ssl-dhparams.pem
     depends_on:
-      - app
+      - rust_backend
     networks:
       - app-network
 
