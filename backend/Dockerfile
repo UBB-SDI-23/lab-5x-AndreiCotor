@@ -8,4 +8,4 @@ RUN rustc --version
 RUN cargo build --release
 RUN cargo install diesel_cli
 
-CMD bash -c "./wait-for-it.sh postgres-cluster-ip-service:5432 -q && diesel migration run && cargo run --release"
+CMD bash -c "diesel migration run && cargo run --release"
