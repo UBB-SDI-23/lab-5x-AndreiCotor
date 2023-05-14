@@ -43,6 +43,7 @@ export default function LoginForm() {
                         <label className="label">Username</label>
                         <div className="control">
                             <input className="input"
+                                   name="username"
                                    type="text" placeholder="Username"
                                    value={username}
                                    onChange={(e) => serUsername(e.target.value)}
@@ -55,6 +56,7 @@ export default function LoginForm() {
                         <label className="label">Password</label>
                         <div className="control">
                             <input className="input"
+                                   name="password"
                                    type="password"
                                    placeholder="Password"
                                    value={password}
@@ -67,7 +69,7 @@ export default function LoginForm() {
                     <p>Don't have an account? <a href="/register">Create one instead.</a></p>
                     <div className="field is-grouped">
                         <div className="control">
-                            <button className="button is-link" onClick={() => login()}>
+                            <button id="submit" className="button is-link" onClick={() => login()}>
                                 Login
                             </button>
                         </div>
