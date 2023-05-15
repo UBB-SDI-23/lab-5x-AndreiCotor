@@ -21,14 +21,14 @@ export default function Table(props: TableProps) {
     const { authContext } = useContext(AuthContext);
 
     function extractObjectProperties(properties: string[], obj: any) {
-        let tsx_list = properties.map((prop) => {
+        let tsx_list = properties.map((prop, index) => {
                 if (prop !== "rating") {
-                    return (<td data-label={prop} onClick={() => navigate(props.path + "/" + obj.id)}>
+                    return (<td data-label={props.columns[index]} onClick={() => navigate(props.path + "/" + obj.id)}>
                         { obj[prop] }
                     </td>);
                 }
                 else {
-                    return (<td className="is-progress-cell" data-label={prop} onClick={() => navigate(props.path + "/" + obj.id)}>
+                    return (<td className="is-progress-cell" data-label="Rating" onClick={() => navigate(props.path + "/" + obj.id)}>
                         <RatingDisplay rating={obj[prop]}/>
                     </td>);
                 }
