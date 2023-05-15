@@ -1,5 +1,6 @@
 describe('Problemarena E2E', () => {
     beforeEach(() => {
+        cy.viewport(1722, 824)
         cy.visit('http://localhost:3000/')
     })
 
@@ -30,7 +31,7 @@ describe('Problemarena E2E', () => {
     })
 
     it('show problems filter', () => {
-        cy.contains('All problems').click()
+        cy.get('#all-problems').click()
 
         cy.get('tr').should('have.length', 4)
 

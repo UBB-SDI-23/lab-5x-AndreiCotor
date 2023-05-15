@@ -13,12 +13,12 @@ export default function AccountComponent() {
     return (
         <div>
             {(!authContext)? (<div>
-                    <a className="button is-info mr-2" href="/login">Login</a>
-                    <a className="button is-info mr-2" href="/register">Register</a>
+                    <a className="button is-info" href="/login">Login</a>
+                    <a className="button is-info" href="/register">Register</a>
                 </div>):
                 <div>
-                    <a className="mr-2" href={"/user/" + authContext.id}>Welcome, {authContext.username}!</a>
-                    <button className="button is-info mr-2" onClick={() => logout()}>Logout</button>
+                    <a href={"/user/" + authContext.id}>Welcome, {authContext.username}!</a>
+                    <button className="button is-info" onClick={() => logout()}>Logout</button>
                 </div>}
         </div>
     );

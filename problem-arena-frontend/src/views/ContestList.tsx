@@ -62,6 +62,7 @@ export default function ContestList() {
                     </button>): null}
                 </div>
             </div>
+            <br/>
             <p className="has-text-danger">{error}</p>
             <Table columns={["Name", "Participants"]}
                    properties={["name", "cnt"]}
