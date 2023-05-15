@@ -46,4 +46,17 @@ describe('Problemarena E2E', () => {
         cy.get('tr').should('have.length', 1)
         cy.contains("No data to show.").should('exist')
     })
+
+    it('show problem edit only for user' ,() => {
+        cy.get('#all-problems').click()
+        cy.get(".edit").should('not.exist')
+
+        cy.contains('Login').click()
+        cy.get('input[name=username]').clear().type("andrei")
+        cy.get('input[name=password]').clear().type("1234567890")
+        cy.contains("Login").get("#submit").click()
+
+        cy.get('#all-problems').click()
+        cy.get(".edit").should('exist')
+    })
 })

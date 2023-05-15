@@ -57,7 +57,7 @@ export default function Table(props: TableProps) {
                         <button className="button is-danger" onClick={() => props.deleteFunction(String(el.id))}>
                             <FontAwesomeIcon icon={faTrash} />
                         </button>
-                        <button className="button is-link" onClick={() => navigate(props.path + "/edit/" + el.id)}>
+                        <button className="button is-link edit" onClick={() => navigate(props.path + "/edit/" + el.id)}>
                             <FontAwesomeIcon icon={faPenToSquare} />
                         </button>
                     </div>

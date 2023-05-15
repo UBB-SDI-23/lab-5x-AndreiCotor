@@ -36,8 +36,6 @@ export default function UserView() {
                     <th>Username</th>
                     <th>Last Name</th>
                     <th>First Name</th>
-                    <th>School</th>
-                    <th>Teacher</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -45,11 +43,11 @@ export default function UserView() {
                     <td>{user?.username}</td>
                     <td>{user?.last_name}</td>
                     <td>{user?.first_name}</td>
-                    <td>{user?.school}</td>
-                    <td>{user?.teacher}</td>
                 </tr>
                 </tbody>
             </table>
+            <p>School: {user?.school}</p>
+            <p>Teacher: {user?.teacher}</p>
             <h2 className="subtitle">Bio</h2>
             <p>{user?.bio}</p>
             <h2 className="subtitle">Statistics</h2>
