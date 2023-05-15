@@ -118,8 +118,8 @@ export default function App() {
         <div style={{height: "100%"}}>
             <AuthContext.Provider value={value}>
                 <NavBar/>
-                <div className="columns" style={{height: "100%"}}>
-                    <div className="column is-2" style={{height: "100%"}}><NavMenu/></div>
+                <div className="columns" style={{height: "100%", padding: '5px'}}>
+                    <div className="column is-2 is-hidden-touch" style={{height: "100%"}}><NavMenu/></div>
                     <div className="column box mt-2"><RouterProvider router={router}/></div>
                 </div>
             </AuthContext.Provider>

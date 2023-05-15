@@ -103,6 +103,7 @@ export default function ParticipationList() {
                     </button>): null}
                 </div>
             </div>
+            <br/>
             <p className="has-text-danger">{error}</p>
             <Table columns={["Official", "Score", "Contest"]}
                    properties={["official", "score", "contest"]}

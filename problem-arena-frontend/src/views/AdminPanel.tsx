@@ -56,19 +56,19 @@ export default function AdminPanel() {
             <div className="columns">
                 <div className="column is-half-desktop">
                     <p>{info}</p>
-                    <button className="button is-link mr-2" onClick={() => submit("participates")}>
+                    <button className="button is-link mt-2 mr-2" onClick={() => submit("participates")}>
                         Delete all participations
                     </button>
-                    <button className="button is-link mr-2" onClick={() => submit("submissions")}>
+                    <button className="button is-link mt-2 mr-2" onClick={() => submit("submissions")}>
                         Delete all submissions
                     </button>
-                    <button className="button is-link mr-2" onClick={() => submit("contests")}>
+                    <button className="button is-link mt-2 mr-2" onClick={() => submit("contests")}>
                         Delete all contests
                     </button>
-                    <button className="button is-link mr-2" onClick={() => submit("problems")}>
+                    <button className="button is-link mt-2 mr-2" onClick={() => submit("problems")}>
                         Delete all problems
                     </button>
-                    <button className="button is-link mt-2" onClick={() => populate()} disabled={!active}>
+                    <button className="button is-link mt-2 mr-2" onClick={() => populate()} disabled={!active}>
                         Run populate script
                     </button>
 

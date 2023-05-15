@@ -5,6 +5,7 @@ import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {PaginationDTO} from "../model/PaginationDTO";
 import {AuthContext} from "../contexts/AuthContext";
+import { useMediaQuery } from 'react-responsive';
 
 export default function ProblemsList() {
     const [problemList, setProblemList] = useState<ProblemWithCreatorDTO[]>([]);
@@ -16,6 +17,7 @@ export default function ProblemsList() {
     const navigate = useNavigate();
     const [error, setError] = useState<string>("");
     const { authContext } = useContext(AuthContext);
+    const isMobile = useMediaQuery({ query: `(max-width: 1780px)` });
 
     useEffect(() => {
         ProblemsService.getProblems(pagination, filter).then((res) => {
@@ -179,13 +181,13 @@ export default function ProblemsList() {
             <nav className="pagination" role="navigation" aria-label="pagination">
                 <button className="pagination-previous" onClick={() => previousPage()}>Previous</button>
                 <button className="pagination-next" onClick={() => nextPage()}>Next page</button>
-                <ul className="pagination-list">
+                {(isMobile)? null:(<ul className="pagination-list">
                     {paginationComponentLeft()}
                     <li>
                         <button className="pagination-link is-current" aria-current="page">{page}</button>
                     </li>
                     {paginationComponentRight()}
-                </ul>
+                </ul>)}
             </nav>
         </div>
     );

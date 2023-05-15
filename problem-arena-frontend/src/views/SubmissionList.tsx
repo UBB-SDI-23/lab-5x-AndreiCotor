@@ -72,6 +72,7 @@ export default function SubmissionList() {
                     </button>): null}
                 </div>
             </div>
+            <br/>
             <p className="has-text-danger">{error}</p>
             <Table columns={["Score", "Language", "Problem"]}
                    properties={["score", "language", "problem"]}
