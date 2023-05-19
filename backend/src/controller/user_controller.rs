@@ -80,7 +80,7 @@ async fn all_users(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> Http
 
         let mut res = vec![];
         for user in users {
-            let cnt = submission_repository::get_all_submissions_by_user_id(&mut conn,user.id).unwrap().len() as i32;
+            let cnt = submission_repository::get_number_of_submissions_by_uid(&mut conn, user.id).unwrap() as i32;
             res.push(UserSubmissionsDTO{user, cnt});
         }
         res
