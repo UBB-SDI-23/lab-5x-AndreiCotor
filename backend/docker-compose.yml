@@ -4,10 +4,10 @@ services:
     build: .
     volumes:
       - './:/usr/src/problemarena'
-    links:
+    depends_on:
       - postgres-cluster-ip-service
     ports:
-      - '8000:8000'
+      - '8000'
     networks:
       - app-network
   postgres-cluster-ip-service:

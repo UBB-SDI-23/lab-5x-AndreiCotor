@@ -25,10 +25,11 @@ import {AuthContext} from "./contexts/AuthContext";
 import {loadLoginDTO} from "./model/LoginDTO";
 import ConfirmAccount from "./views/ConfirmAccount";
 import AdminPanel from "./views/AdminPanel";
+import Chat from "./views/Chat";
 
 const router = createBrowserRouter([{
     path: '/',
-    element: <div>Hello world!</div>
+    element: <Chat />
 }, {
     path: '/problems',
     element: <ProblemsList />
