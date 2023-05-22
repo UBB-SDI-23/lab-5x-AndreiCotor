@@ -1,12 +1,15 @@
-import {useCallback, useEffect, useState} from "react";
+import {useCallback, useContext, useEffect, useState} from "react";
 import useWebSocket, {ReadyState} from 'react-use-websocket';
 import {socketUrl} from "../config";
+import {AuthContext} from "../contexts/AuthContext";
 
 export default function Chat() {
     const [message, setMessage] = useState<string>("");
     const [nickname, setNickname] = useState<string | undefined>();
     const [messageList, setMessageList] = useState<any>([]);
     const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl);
+
+    const { authContext } = useContext(AuthContext);
 
     useEffect(() => {
         if (lastMessage !== null) {
@@ -17,13 +20,14 @@ export default function Chat() {
     const handleSendMessage = useCallback(() => {
         let obj = {
             author: nickname,
-            message: message
+            message: message,
+            uid: (authContext? authContext.id : null)
         };
         console.log(obj);
         let val = JSON.stringify(obj);
         console.log(val);
         sendMessage(val)
-    }, [message, nickname, sendMessage]);
+    }, [authContext, message, nickname, sendMessage]);
 
     const sendMessageFct = () => {
         const msg = {

@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 use actix::prelude::*;
+use diesel::serialize::IsNull::No;
 use serde::{Deserialize, Serialize};
 
 #[derive(Message)]
@@ -8,7 +9,8 @@ use serde::{Deserialize, Serialize};
 #[rtype(result = "()")]
 pub struct Message{
     pub message: String,
-    pub author: String
+    pub author: String,
+    pub uid: Option<i32>
 }
 
 #[derive(Message)]
@@ -30,7 +32,8 @@ pub struct Disconnect {
 pub struct ClientMessage {
     pub id: String,
     pub msg: String,
-    pub author: String
+    pub author: String,
+    pub uid: Option<i32>
 }
 
 #[derive(Debug)]
@@ -47,13 +50,14 @@ impl ChatServer {
         }
     }
 
-    fn send_message(&self, message: &str, skip_id: String, author: &str) {
+    fn send_message(&self, message: &str, skip_id: String, author: &str, uid: Option<i32>) {
         for id in &self.connected {
             if *id != skip_id {
                 if let Some(addr) = self.sessions.get(id) {
                     addr.do_send(Message {
                         message: message.to_owned(),
-                        author: author.to_owned()
+                        author: author.to_owned(),
+                        uid
                     });
                 }
             }
@@ -71,7 +75,8 @@ impl Handler<Connect> for ChatServer {
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
         self.send_message((msg.author + " joined").as_str(),
                           Uuid::new_v4().to_string(),
-                          "Server"
+                          "Server",
+                          None
         );
 
         let id = Uuid::new_v4().to_string();
@@ -90,7 +95,8 @@ impl Handler<Disconnect> for ChatServer {
         self.connected.remove(msg.id.as_str());
         self.send_message((msg.author + " disconnected").as_str(),
                           Uuid::new_v4().to_string(),
-                          "Server"
+                          "Server",
+                          None
         );
     }
 }
@@ -99,6 +105,6 @@ impl Handler<ClientMessage> for ChatServer {
     type Result = ();
 
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
-        self.send_message(msg.msg.as_str(), msg.id, msg.author.as_str());
+        self.send_message(msg.msg.as_str(), msg.id, msg.author.as_str(), msg.uid);
     }
 }
