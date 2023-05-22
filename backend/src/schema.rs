@@ -1,6 +1,15 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    chat (id) {
+        id -> Int4,
+        nickname -> Varchar,
+        message -> Varchar,
+        uid -> Nullable<Int4>,
+    }
+}
+
+diesel::table! {
     contest (id) {
         id -> Int4,
         name -> Varchar,
@@ -71,6 +80,7 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(chat -> users (uid));
 diesel::joinable!(contest -> users (uid));
 diesel::joinable!(participates -> contest (cid));
 diesel::joinable!(participates -> users (uid));
@@ -79,6 +89,7 @@ diesel::joinable!(submissions -> problems (problem_id));
 diesel::joinable!(submissions -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    chat,
     contest,
     pagoptions,
     participates,

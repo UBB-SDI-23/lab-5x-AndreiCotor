@@ -3,7 +3,9 @@ use actix_web::{HttpRequest, HttpResponse, web, get, Error};
 use actix_web_actors::ws;
 use crate::controller::chat;
 use actix::{Actor, Addr};
+use actix_web::web::Data;
 use crate::controller::chat::{server, session};
+use crate::DbPool;
 
 
 pub fn chat_config(cfg: &mut web::ServiceConfig) {
@@ -11,7 +13,7 @@ pub fn chat_config(cfg: &mut web::ServiceConfig) {
 }
 
 #[get("/api/chat/ws")]
-async fn chat_route(req: HttpRequest, stream: web::Payload, srv: web::Data<Addr<server::ChatServer>>)
+async fn chat_route(req: HttpRequest, stream: web::Payload, pool: Data<DbPool>, srv: web::Data<Addr<server::ChatServer>>)
     -> Result<HttpResponse, Error> {
     ws::start(
         session::WsChatSession {
@@ -19,6 +21,7 @@ async fn chat_route(req: HttpRequest, stream: web::Payload, srv: web::Data<Addr<
             hb: Instant::now(),
             name: None,
             addr: srv.get_ref().clone(),
+            db_pool: pool
         },
         &req,
         stream,
