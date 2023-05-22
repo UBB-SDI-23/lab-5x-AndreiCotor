@@ -1,18 +1,23 @@
 use std::time::{Duration, Instant};
 use actix::prelude::*;
+use actix_web::web;
+use actix_web::web::Data;
 use actix_web_actors::ws;
 use serde::Serialize;
 use crate::controller::chat::server;
+use crate::DbPool;
+use crate::model::chat::Chat;
+use crate::repository::chat_repo;
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
-#[derive(Debug)]
 pub struct WsChatSession {
     pub id: String,
     pub hb: Instant,
     pub name: Option<String>,
-    pub addr: Addr<server::ChatServer>
+    pub addr: Addr<server::ChatServer>,
+    pub db_pool: Data<DbPool>
 }
 
 impl WsChatSession {
@@ -100,9 +105,17 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsChatSession {
 
                 self.addr.do_send(server::ClientMessage {
                     id: self.id.clone(),
-                    msg: msg.message,
+                    msg: msg.message.clone(),
                     author: self.name.clone().unwrap(),
+                    uid: msg.uid
                 });
+
+                let mut conn = self.db_pool.get().unwrap();
+                chat_repo::add_chat(&mut conn, Chat {
+                    nickname: self.name.clone().unwrap(),
+                    message: msg.message,
+                    uid: msg.uid,
+                })
             }
             ws::Message::Binary(_) => println!("Unexpected binary"),
             ws::Message::Close(reason) => {
