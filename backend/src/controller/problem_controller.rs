@@ -5,6 +5,7 @@ use actix_web::web::{Data, Json, Path, ReqData};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use crate::model::problem::{NewProblem, Problem, UpdProblem};
 use serde::{Deserialize};
+use crate::controller::hate_speech::is_hate_speech;
 use crate::DbPool;
 use crate::middleware::authentication_validator;
 use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
@@ -54,6 +55,10 @@ async fn add_problem(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>,
     if !new_problem.is_valid() {
         return HttpResponse::BadRequest().finish();
     }
+
+    if is_hate_speech(new_problem.statement.clone()).await == true {
+        return HttpResponse::BadRequest().body("Hate speech detected!");
+    }
     
     new_problem.uid = Some(req_user.unwrap().id);
 
@@ -90,6 +95,10 @@ async fn update_problem(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims
     let new_problem = new_problem_json.into_inner();
     if !new_problem.is_valid() {
         return HttpResponse::BadRequest().finish();
+    }
+
+    if is_hate_speech(new_problem.statement.clone()).await == true {
+        return HttpResponse::BadRequest().body("Hate speech detected!");
     }
 
     match web::block(move || {

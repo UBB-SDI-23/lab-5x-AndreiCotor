@@ -54,7 +54,12 @@ export default function ProblemDetailsForm() {
 
             ProblemsService.updateProblem(problem).then((res) => {
                 navigate(-1);
-            }).catch((res) => setErrors({general: "An error has occurred!"}));
+            }).catch((res) => {
+                if (res.request && res.request.response)
+                    setErrors({general: res.request.response})
+                else
+                    setErrors({general: "An error has occurred!"})
+            });
         }
         else {
             const problem: NewProblem = {
@@ -67,7 +72,12 @@ export default function ProblemDetailsForm() {
 
             ProblemsService.addProblem(problem).then((res) => {
                 navigate(-1);
-            }).catch((res) => setErrors({general: "An error has occurred!"}));
+            }).catch((res) => {
+                if (res.request && res.request.response)
+                    setErrors({general: res.request.response})
+                else
+                    setErrors({general: "An error has occurred!"})
+            });
         }
     }
 
