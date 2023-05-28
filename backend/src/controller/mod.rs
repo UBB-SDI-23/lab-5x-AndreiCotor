@@ -7,3 +7,4 @@ pub mod authentication_controller;
 pub mod admin_controller;
 pub mod chat_controller;
 pub(crate) mod chat;
+mod hate_speech;

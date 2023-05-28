@@ -6,8 +6,19 @@ services:
       - './:/usr/src/problemarena'
     depends_on:
       - postgres-cluster-ip-service
+      - ai_backend
     ports:
       - '8000'
+    networks:
+      - app-network
+  ai_backend:
+    build:
+      context: ./ai
+      dockerfile: Dockerfile
+    volumes:
+      - './ai:/app'
+    ports:
+      - '8080'
     networks:
       - app-network
   postgres-cluster-ip-service:
