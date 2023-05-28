@@ -49,5 +49,5 @@ def detect_hate_speech():
 
 if __name__ == '__main__':
     hate_speech_predictor = HateSpeechPredictor()
-    run(host='localhost', port=8080)
+    run(host='0.0.0.0', port=8080)
     
