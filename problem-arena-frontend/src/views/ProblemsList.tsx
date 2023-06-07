@@ -146,6 +146,14 @@ export default function ProblemsList() {
         return res;
     }
 
+    const firstPage = async () => {
+        await toPage(1);
+    }
+
+    const lastPage = async () => {
+        await toPage(numPages);
+    }
+
     return (
         <div className="mr-2">
             <div className="columns">
@@ -181,7 +189,12 @@ export default function ProblemsList() {
             <nav className="pagination" role="navigation" aria-label="pagination">
                 <button className="pagination-previous" onClick={() => previousPage()}>Previous</button>
                 <button className="pagination-next" onClick={() => nextPage()}>Next page</button>
-                {(isMobile)? null:(<ul className="pagination-list">
+                {(isMobile)? (
+                    <ul className="pagination-list">
+                        <button className="pagination-link" onClick={() => firstPage()}>First page</button>
+                        <button className="pagination-link" onClick={() => lastPage()}>Last page</button>
+                    </ul>
+                ):(<ul className="pagination-list">
                     {paginationComponentLeft()}
                     <li>
                         <button className="pagination-link is-current" aria-current="page">{page}</button>

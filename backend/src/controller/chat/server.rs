@@ -1,7 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 use actix::prelude::*;
-use diesel::serialize::IsNull::No;
 use serde::{Deserialize, Serialize};
 
 #[derive(Message)]

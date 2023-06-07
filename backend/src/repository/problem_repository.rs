@@ -12,13 +12,6 @@ pub fn get_problems_paginated(db: &mut Mockable<DbConn>, pagination: PaginationD
     }
 }
 
-pub fn get_all_problems(db: &mut Mockable<DbConn>) -> Result<Vec<Problem>, DbError> {
-    match db {
-        Mockable::Real(inner) => real::get_all_problems(inner),
-        Mockable::Mock => panic!("Mock not implemented!")
-    }
-}
-
 pub fn number_of_problems(db: &mut Mockable<DbConn>) -> Result<i32, DbError> {
     match db {
         Mockable::Real(inner) => real::number_of_problems(inner),
@@ -131,11 +124,6 @@ mod real {
         Ok(problem_list)
     }
 
-    pub fn get_all_problems(db: &mut PgConnection) -> Result<Vec<Problem>, DbError> {
-        let problem_list = problems.load(db)?;
-        Ok(problem_list)
-    }
-
     pub fn number_of_problems(db: &mut PgConnection) -> Result<i32, DbError> {
         let cnt: i64 = problems.count().get_result(db).unwrap();
         Ok(cnt as i32)
@@ -197,9 +185,6 @@ mod real {
     }
 
     pub fn get_problems_by_submissions(db: &mut PgConnection, pagination: StatisticPagination) -> Result<Vec<(Problem, i32)>, DbError> {
-        use crate::schema::*;
-        use diesel::dsl::count_star;
-
         let auxiliary_list =  if pagination.direction == 1 {
             sql_query(format!("SELECT * FROM PROBLEMSSUBMISSIONS WHERE CNT > {} OR (CNT = {} AND PID > {}) ORDER BY CNT, PID limit {}", pagination.last_stat, pagination.last_stat, pagination.last_id, pagination.limit))
                 .get_results::<Auxiliary>(db)?

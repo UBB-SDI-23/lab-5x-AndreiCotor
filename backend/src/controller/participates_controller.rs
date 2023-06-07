@@ -1,8 +1,6 @@
 use actix_web::{HttpResponse, web, post, delete, put, get};
 use actix_web::web::{Data, Json, Path, ReqData};
-use actix_web_httpauth::middleware::HttpAuthentication;
 use crate::DbPool;
-use crate::middleware::authentication_validator;
 use crate::model::dto::pagination_dto::ParticipationPaginationDTO;
 use crate::model::dto::participates_dto::ParticipatesDTO;
 use crate::model::dto::token_claims::TokenClaims;

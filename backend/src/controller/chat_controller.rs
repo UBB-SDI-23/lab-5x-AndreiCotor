@@ -1,8 +1,7 @@
 use std::time::Instant;
 use actix_web::{HttpRequest, HttpResponse, web, get, Error};
 use actix_web_actors::ws;
-use crate::controller::chat;
-use actix::{Actor, Addr};
+use actix::Addr;
 use actix_web::web::Data;
 use crate::controller::chat::{server, session};
 use crate::DbPool;

@@ -1,4 +1,3 @@
-use diesel::QueryResult;
 use crate::model::chat::Chat;
 use crate::repository::DbConn;
 use crate::utils::mock::Mockable;

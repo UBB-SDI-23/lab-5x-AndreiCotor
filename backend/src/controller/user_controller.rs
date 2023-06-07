@@ -1,13 +1,11 @@
-use actix_web::{HttpResponse, web, get, delete, put, post};
+use actix_web::{HttpResponse, web, get, delete, put};
 use actix_web::web::{Data, Json, Path, ReqData};
-use actix_web_httpauth::middleware::HttpAuthentication;
 use serde::Deserialize;
 use crate::DbPool;
-use crate::middleware::authentication_validator;
 use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
 use crate::model::dto::token_claims::TokenClaims;
-use crate::model::dto::user_dto::{UserDTO, UserPageDTO, UserReportDTO, UserSubmissionsDTO};
-use crate::model::user::{NewUser, User};
+use crate::model::dto::user_dto::{UserPageDTO, UserReportDTO, UserSubmissionsDTO};
+use crate::model::user::User;
 use crate::repository::{contest_repository, pagination_options_repo, participates_repository, problem_repository, submission_repository, user_credentials_repo, users_repo};
 
 pub fn user_config(cfg: &mut web::ServiceConfig) {
@@ -93,7 +91,7 @@ async fn all_users(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> Http
 
 #[get("/api/user/autocomplete")]
 async fn get_users_autocomplete(pool: Data<DbPool>, path: web::Query<Autocomplete>) -> HttpResponse {
-    let mut users = web::block(move || {
+    let users = web::block(move || {
         let mut conn = pool.get().unwrap();
         users_repo::get_users_by_last_name(&mut conn, path.into_inner().lname)
     }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();

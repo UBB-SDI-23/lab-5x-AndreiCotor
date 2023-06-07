@@ -1,6 +1,5 @@
 use diesel::prelude::*;
 use serde::{Serialize, Deserialize};
-use crate::schema::contest::name;
 use crate::schema::problems;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Queryable, AsChangeset, Identifiable)]
@@ -33,7 +32,7 @@ pub struct NewProblem {
 
 impl NewProblem {
     pub fn is_valid(&self) -> bool {
-        0 <= self.rating && self.rating <= 5 && self.name.len() > 0 && self.name.len() >= 3
+        0 <= self.rating && self.rating <= 5 && !self.name.is_empty() && self.name.len() >= 3
     }
 }
 
@@ -50,6 +49,6 @@ pub struct UpdProblem {
 
 impl UpdProblem {
     pub fn is_valid(&self) -> bool {
-        0 <= self.rating && self.rating <= 5 && self.name.len() > 0 && self.name.len() >= 3
+        0 <= self.rating && self.rating <= 5 && !self.name.is_empty() && self.name.len() >= 3
     }
 }

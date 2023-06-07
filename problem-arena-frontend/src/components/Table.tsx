@@ -49,7 +49,7 @@ export default function Table(props: TableProps) {
 
     const tableRows = props.elements.map((el, index) => {
         return (<tr key={index}>
-            <td onClick={() => navigate(props.path + "/" + el.id)}>{index + 1}</td>
+            <td onClick={() => navigate(props.path + "/" + el.id)}>{typeof el.id === "string"? index + 1: el.id}</td>
             { extractObjectProperties(props.properties, el) }
             { (authContext && (authContext.role !== "regular" || (props.uid && authContext.id === el[props.uid])))?
                 (<td className="is-actions-cell">

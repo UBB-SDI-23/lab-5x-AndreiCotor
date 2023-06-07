@@ -1,11 +1,11 @@
 use actix_web::{HttpResponse, web, post, get};
 use actix_web::web::{Data, Json, Path};
-use password_hash::{PasswordHash, PasswordHasher, Salt};
-use crate::{DbPool, model};
+use password_hash::{PasswordHash, Salt};
+use crate::DbPool;
 use crate::model::user_credentials::{InsertableUserCredentials, NewUserCredentials};
 use crate::repository::{user_credentials_repo, users_repo};
 use argon2::Argon2;
-use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
+use chrono::{Duration, Utc};
 use crate::model::dto::token_claims::TokenClaims;
 use jwt::SignWithKey;
 use hmac::{Hmac, Mac};
@@ -76,12 +76,13 @@ async fn register(pool: Data<DbPool>, credential_json: Json<NewUserCredentials>)
     let res = web::block(move || {
         let mut conn = pool.get().unwrap();
         let res = user_credentials_repo::add_user_credentials(&mut conn, ins_credential.clone());
-        if (res.is_err()) {
+        if res.is_err() {
             return Err(());
         }
         let added = user_credentials_repo::get_user_credentials(&mut conn, ins_credential.username).unwrap();
         users_repo::add_user(&mut conn, User::from_id(added.id, added.username));
-        return Ok(());
+
+        Ok(())
     }).await.unwrap();
 
     match res {

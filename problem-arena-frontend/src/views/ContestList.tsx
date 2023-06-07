@@ -50,6 +50,14 @@ export default function ContestList() {
         }
     }
 
+    const firstPage = () => {
+        setPagination({first_id: -1, last_id: 0, limit: 10, direction: 1});
+    }
+
+    const lastPage = () => {
+        setPagination({first_id: 1000000000, last_id: 1000000000, limit: 10, direction: -1});
+    }
+
     return (
         <div className="mr-2">
             <div className="columns">
@@ -75,6 +83,10 @@ export default function ContestList() {
             <nav className="pagination" role="navigation" aria-label="pagination">
                 <button className="pagination-previous" onClick={() => previousPage()}>Previous</button>
                 <button className="pagination-next" onClick={() => nextPage()}>Next page</button>
+                <ul className="pagination-list">
+                    <button className="pagination-link" onClick={() => firstPage()}>First page</button>
+                    <button className="pagination-link" onClick={() => lastPage()}>Last page</button>
+                </ul>
             </nav>
         </div>
     );

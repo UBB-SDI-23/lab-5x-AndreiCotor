@@ -1,13 +1,10 @@
-use std::cmp::Ordering::Equal;
 use std::collections::HashMap;
 use actix_web::{web, get, delete, put, post, HttpResponse};
 use actix_web::web::{Data, Json, Path, ReqData};
-use actix_web_httpauth::middleware::HttpAuthentication;
-use crate::model::problem::{NewProblem, Problem, UpdProblem};
+use crate::model::problem::{NewProblem, UpdProblem};
 use serde::{Deserialize};
 use crate::controller::hate_speech::is_hate_speech;
 use crate::DbPool;
-use crate::middleware::authentication_validator;
 use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
 use crate::model::dto::problem_dto::{ProblemByOtherSolvedProblemsDTO, ProblemDTO, ProblemStatisticsDTO, ProblemWithCreatorDTO};
 use crate::model::dto::token_claims::TokenClaims;
@@ -56,7 +53,7 @@ async fn add_problem(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>,
         return HttpResponse::BadRequest().finish();
     }
 
-    if is_hate_speech(new_problem.statement.clone()).await == true {
+    if is_hate_speech(new_problem.statement.clone()).await {
         return HttpResponse::BadRequest().body("Hate speech detected!");
     }
     
@@ -97,7 +94,7 @@ async fn update_problem(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims
         return HttpResponse::BadRequest().finish();
     }
 
-    if is_hate_speech(new_problem.statement.clone()).await == true {
+    if is_hate_speech(new_problem.statement.clone()).await {
         return HttpResponse::BadRequest().body("Hate speech detected!");
     }
 
@@ -170,7 +167,7 @@ async fn all_problems(pool: Data<DbPool>, query: web::Query<RatingQuery>) -> Htt
 
 #[get("/api/problem/autocomplete")]
 async fn get_problems_autocomplete(pool: Data<DbPool>, query: web::Query<Autocomplete>) -> HttpResponse {
-    let mut problems = web::block(move || {
+    let problems = web::block(move || {
         let mut conn = pool.get().unwrap();
         problem_repository::get_problem_by_name(&mut conn, query.into_inner().name)
     }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
