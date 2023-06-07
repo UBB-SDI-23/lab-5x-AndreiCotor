@@ -11,13 +11,6 @@ pub fn get_contests_paginated(db: &mut Mockable<DbConn>, pagination: PaginationD
     }
 }
 
-pub fn get_all_contests(db: &mut Mockable<DbConn>) -> Result<Vec<Contest>, DbError> {
-    match db {
-        Mockable::Real(inner) => real::get_all_contests(inner),
-        Mockable::Mock => panic!("Mock not implemented!")
-    }
-}
-
 pub fn get_contests_by_name(db: &mut Mockable<DbConn>, cname: Option<String>) -> Result<Vec<Contest>, DbError> {
     match db {
         Mockable::Real(inner) => real::get_contests_by_name(inner, cname),
@@ -87,11 +80,6 @@ mod real {
                 .load(db)?
         };
 
-        Ok(contest_list)
-    }
-
-    pub fn get_all_contests(db: &mut PgConnection) -> Result<Vec<Contest>, DbError> {
-        let contest_list = contest.load(db)?;
         Ok(contest_list)
     }
 

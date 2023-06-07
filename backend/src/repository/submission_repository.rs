@@ -11,13 +11,6 @@ pub fn add_submission(db: &mut Mockable<DbConn>, submission: NewSubmission) {
     }
 }
 
-pub fn get_all_submissions(db: &mut Mockable<DbConn>) -> Result<Vec<Submission>, DbError> {
-    match db {
-        Mockable::Real(inner) => real::get_all_submissions(inner),
-        Mockable::Mock => panic!("Mock not implemented!")
-    }
-}
-
 pub fn get_submissions_paginated(db: &mut Mockable<DbConn>, pagination: PaginationDTO) -> Result<Vec<Submission>, DbError> {
     match db {
         Mockable::Real(inner) => real::get_submissions_paginated(inner, pagination),
@@ -35,13 +28,6 @@ pub fn get_submission(db: &mut Mockable<DbConn>, sid: i32) -> Result<Option<Subm
 pub fn get_all_submissions_by_problem_id(db: &mut Mockable<DbConn>, pid: i32) -> Result<Vec<Submission>, DbError> {
     match db {
         Mockable::Real(inner) => real::get_all_submissions_by_problem_id(inner, pid),
-        Mockable::Mock => panic!("Mock not implemented!")
-    }
-}
-
-pub fn get_all_submissions_by_user_id(db: &mut Mockable<DbConn>, uid: i32) -> Result<Vec<Submission>, DbError> {
-    match db {
-        Mockable::Real(inner) => real::get_all_submissions_by_user_id(inner, uid),
         Mockable::Mock => panic!("Mock not implemented!")
     }
 }
@@ -101,11 +87,6 @@ mod real {
         Ok(submission_list)
     }
 
-    pub fn get_all_submissions(db: &mut PgConnection) -> Result<Vec<Submission>, DbError> {
-        let submission_list = submissions.load(db)?;
-        Ok(submission_list)
-    }
-
     pub fn get_submission(db: &mut PgConnection, sid: i32) -> Result<Option<Submission>, DbError> {
         let submission = submissions.filter(id.eq(sid)).first::<Submission>(db).optional().unwrap();
         Ok(submission)
@@ -113,11 +94,6 @@ mod real {
 
     pub fn get_all_submissions_by_problem_id(db: &mut PgConnection, pid: i32) -> Result<Vec<Submission>, DbError> {
         let submission_list = submissions.filter(problem_id.eq(pid)).load(db).unwrap();
-        Ok(submission_list)
-    }
-
-    pub fn get_all_submissions_by_user_id(db: &mut PgConnection, uid: i32) -> Result<Vec<Submission>, DbError> {
-        let submission_list = submissions.filter(user_id.eq(uid)).load(db).unwrap();
         Ok(submission_list)
     }
 

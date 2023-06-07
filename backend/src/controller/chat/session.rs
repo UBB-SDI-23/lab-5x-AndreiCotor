@@ -1,9 +1,7 @@
 use std::time::{Duration, Instant};
 use actix::prelude::*;
-use actix_web::web;
 use actix_web::web::Data;
 use actix_web_actors::ws;
-use serde::Serialize;
 use crate::controller::chat::server;
 use crate::DbPool;
 use crate::model::chat::Chat;

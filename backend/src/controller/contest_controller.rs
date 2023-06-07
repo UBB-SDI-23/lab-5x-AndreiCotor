@@ -1,12 +1,9 @@
 use actix_web::{HttpResponse, web, post, delete, put, get};
 use actix_web::web::{Data, Json, Path, ReqData};
-use actix_web_httpauth::middleware::HttpAuthentication;
 use serde::Deserialize;
 use crate::DbPool;
-use crate::middleware::authentication_validator;
-use crate::model::contest;
-use crate::model::contest::{Contest, NewContest, UpdContest};
-use crate::model::dto::contest_dto::{ContestDTO, ContestWithCreatorDTO};
+use crate::model::contest::{NewContest, UpdContest};
+use crate::model::dto::contest_dto::ContestWithCreatorDTO;
 use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::model::dto::token_claims::TokenClaims;
 use crate::repository::{contest_repository, pagination_options_repo, participates_repository, user_credentials_repo};
@@ -103,7 +100,7 @@ async fn all_contests(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> H
 
 #[get("/api/contest/autocomplete")]
 async fn get_contest_autocomplete(pool: Data<DbPool>, query: web::Query<Autocomplete>) -> HttpResponse {
-    let mut contests = web::block(move || {
+    let contests = web::block(move || {
         let mut conn = pool.get().unwrap();
         contest_repository::get_contests_by_name(&mut conn, query.into_inner().name)
     }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();

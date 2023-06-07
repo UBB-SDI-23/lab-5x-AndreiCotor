@@ -1,6 +1,5 @@
 use actix_web::dev::ServiceRequest;
-use actix_web::{Error, HttpMessage, HttpResponse};
-use actix_web::error::ErrorUnauthorized;
+use actix_web::{Error, HttpMessage};
 use actix_web_httpauth::extractors::AuthenticationError;
 use actix_web_httpauth::extractors::{bearer::BearerAuth, bearer};
 use hmac::{Hmac, Mac};

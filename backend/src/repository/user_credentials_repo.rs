@@ -1,7 +1,6 @@
 use diesel::prelude::*;
-use crate::model::user_credentials::{InsertableUserCredentials, NewUserCredentials, UpdateRoleCredentials, UserCredentials};
-use crate::repository::{DbConn, DbError};
-use crate::schema::usercredentials::username;
+use crate::model::user_credentials::{InsertableUserCredentials, UpdateRoleCredentials, UserCredentials};
+use crate::repository::{DbConn};
 use crate::utils::mock::Mockable;
 
 pub fn add_user_credentials(db: &mut Mockable<DbConn>, uc: InsertableUserCredentials) -> QueryResult<usize> {
@@ -48,8 +47,7 @@ pub fn update_user_credentials_role(db: &mut Mockable<DbConn>, uc: UpdateRoleCre
 
 mod real {
     use diesel::prelude::*;
-    use crate::model::user_credentials::{InsertableUserCredentials, NewUserCredentials, UpdateRoleCredentials, UserCredentials};
-    use crate::repository::DbError;
+    use crate::model::user_credentials::{InsertableUserCredentials, UpdateRoleCredentials, UserCredentials};
     use crate::schema::usercredentials::dsl::*;
 
     pub fn add_user_credentials(db: &mut PgConnection, uc: InsertableUserCredentials) -> QueryResult<usize> {

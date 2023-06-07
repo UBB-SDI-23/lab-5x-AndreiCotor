@@ -1,8 +1,6 @@
-use std::future::Future;
 use std::process::Command;
 use actix_web::{HttpResponse, web, put, delete, get};
 use actix_web::web::{Data, Json};
-use diesel::QueryResult;
 use crate::DbPool;
 use crate::model::pagination_options::PagOption;
 use crate::model::user_credentials::UpdateRoleCredentials;

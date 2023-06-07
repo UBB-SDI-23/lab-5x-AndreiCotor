@@ -81,6 +81,29 @@ export default function ParticipationList() {
         }
     }
 
+    const firstPage = () => {
+        setPagination({
+            first_uid: -1,
+            first_cid: -1,
+            last_uid: 0,
+            last_cid: 0,
+            limit: 10,
+            direction: 1
+        });
+    }
+
+    const lastPage = () => {
+        setPagination({
+            first_uid: 1000000000,
+            first_cid: 1000000000,
+            last_uid: 1000000000,
+            last_cid: 1000000000,
+            limit: 10,
+            direction: -1
+        });
+    }
+
+
     const participationsWithURLid = participationList.map((el) => ({
         id: String(el.uid) + "/" + String(el.cid),
         official: String(el.official),
@@ -116,6 +139,10 @@ export default function ParticipationList() {
             <nav className="pagination" role="navigation" aria-label="pagination">
                 <button className="pagination-previous" onClick={() => previousPage()}>Previous</button>
                 <button className="pagination-next" onClick={() => nextPage()}>Next page</button>
+                <ul className="pagination-list">
+                    <button className="pagination-link" onClick={() => firstPage()}>First page</button>
+                    <button className="pagination-link" onClick={() => lastPage()}>Last page</button>
+                </ul>
             </nav>
         </div>
     );
