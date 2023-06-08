@@ -22,7 +22,7 @@ export default function ProblemDetailsForm() {
                setContest(problem.contest);
                setRating(problem.rating);
                setStatement(problem.statement);
-            });
+            }).catch((res) => setErrors({general: "An error has occurred!"}));
         }
     }, [id]);
 
@@ -53,14 +53,13 @@ export default function ProblemDetailsForm() {
             };
 
             ProblemsService.updateProblem(problem).then((res) => {
-                if (res.status !== 200) {
-                    alert(res.statusText);
-                }
-                else {
-                    alert("Problem was updated successfully!");
-                    navigate(-1);
-                }
-            })
+                navigate(-1);
+            }).catch((res) => {
+                if (res.request && res.request.response)
+                    setErrors({general: res.request.response})
+                else
+                    setErrors({general: "An error has occurred!"})
+            });
         }
         else {
             const problem: NewProblem = {
@@ -72,14 +71,13 @@ export default function ProblemDetailsForm() {
             };
 
             ProblemsService.addProblem(problem).then((res) => {
-                if (res.status !== 200) {
-                    alert(res.statusText);
-                }
-                else {
-                    alert("Problem was added successfully!");
-                    navigate(-1);
-                }
-            })
+                navigate(-1);
+            }).catch((res) => {
+                if (res.request && res.request.response)
+                    setErrors({general: res.request.response})
+                else
+                    setErrors({general: "An error has occurred!"})
+            });
         }
     }
 
@@ -88,6 +86,7 @@ export default function ProblemDetailsForm() {
             <h1 className="title">{id != null? "Edit Problem": "Create Problem"}</h1>
             <div className="columns">
                 <div className="column is-half-desktop">
+                    {errors["general"]? (<p className="has-text-danger">{errors["general"]}</p>) : null}
                     <div className="field">
                         <label className="label">Name</label>
                         <div className="control">

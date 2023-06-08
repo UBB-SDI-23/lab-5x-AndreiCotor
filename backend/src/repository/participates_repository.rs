@@ -4,13 +4,6 @@ use crate::model::participates::Participates;
 use crate::repository::{DbConn, DbError};
 use crate::utils::mock::Mockable;
 
-pub fn get_all_participation(db: &mut Mockable<DbConn>) -> Result<Vec<Participates>, DbError> {
-    match db {
-        Mockable::Real(inner) => real::get_all_participation(inner),
-        Mockable::Mock => panic!("Mock not implemented!")
-    }
-}
-
 pub fn get_participation_paginated(db: &mut Mockable<DbConn>, pagination: ParticipationPaginationDTO) -> Result<Vec<Participates>, DbError> {
     match db {
         Mockable::Real(inner) => real::get_participation_paginated(inner, pagination),
@@ -21,13 +14,6 @@ pub fn get_participation_paginated(db: &mut Mockable<DbConn>, pagination: Partic
 pub fn get_participation_by_ids(db: &mut Mockable<DbConn>, usid: i32, coid: i32) -> Result<Option<Participates>, DbError> {
     match db {
         Mockable::Real(inner) => real::get_participation_by_ids(inner, usid, coid),
-        Mockable::Mock => panic!("Mock not implemented!")
-    }
-}
-
-pub fn add_participation(db: &mut Mockable<DbConn>, participation: Participates) -> QueryResult<usize> {
-    match db {
-        Mockable::Real(inner) => real::add_participation(inner, participation),
         Mockable::Mock => panic!("Mock not implemented!")
     }
 }
@@ -60,17 +46,26 @@ pub fn get_participation_by_cid(db: &mut Mockable<DbConn>, coid: i32) -> Result<
     }
 }
 
+pub fn get_number_of_participation_by_uid(db: &mut Mockable<DbConn>, usid: i32) -> QueryResult<i64> {
+    match db {
+        Mockable::Real(inner) => real::get_number_of_participation_by_uid(inner, usid),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
+pub fn delete_all_participations(db: &mut Mockable<DbConn>) -> QueryResult<usize> {
+    match db {
+        Mockable::Real(inner) => real::delete_all_participations(inner),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
 mod real {
     use diesel::prelude::*;
     use crate::model::dto::pagination_dto::ParticipationPaginationDTO;
     use crate::model::participates::Participates;
     use crate::repository::DbError;
     use crate::schema::participates::dsl::*;
-
-    pub fn get_all_participation(db: &mut PgConnection) -> Result<Vec<Participates>, DbError> {
-        let participation_list = participates.load(db)?;
-        Ok(participation_list)
-    }
 
     pub fn get_participation_paginated(db: &mut PgConnection, pagination: ParticipationPaginationDTO) -> Result<Vec<Participates>, DbError> {
         let participates_list = if pagination.direction == 1 {
@@ -102,8 +97,10 @@ mod real {
         Ok(participation_list)
     }
 
-    pub fn add_participation(db: &mut PgConnection, participation: Participates) -> QueryResult<usize> {
-        diesel::insert_into(participates).values(participation).execute(db)
+    pub fn get_number_of_participation_by_uid(db: &mut PgConnection, usid: i32) -> QueryResult<i64> {
+        participates.filter(cid.eq(usid))
+            .count()
+            .get_result(db)
     }
 
     pub fn add_multiple_participations(db: &mut PgConnection, participation_list: Vec<Participates>) -> QueryResult<usize> {
@@ -112,6 +109,10 @@ mod real {
 
     pub fn delete_participation(db: &mut PgConnection, usid: i32, coid: i32) -> QueryResult<usize> {
         diesel::delete(participates.filter(uid.eq(usid)).filter(cid.eq(coid))).execute(db)
+    }
+
+    pub fn delete_all_participations(db: &mut PgConnection) -> QueryResult<usize> {
+        diesel::delete(participates).execute(db)
     }
 
     pub fn update_participation(db: &mut PgConnection, part: Participates) -> QueryResult<usize> {

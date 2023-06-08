@@ -1,0 +1,1 @@
+INSERT INTO USERCREDENTIALS (id, username, password, confirmed, uuid, role) VALUES (10001, 'andrei', '$argon2id$v=19$m=19456,t=2,p=1$YW5kcmVpZWJvc3Nz$0SaZ1FIgsw6lEBAZfDW8aRrVrktwJ/vsF7YzFPF397I', true, 'b04d45ee-615a-4adc-9101-62be7e52935d', 'admin')

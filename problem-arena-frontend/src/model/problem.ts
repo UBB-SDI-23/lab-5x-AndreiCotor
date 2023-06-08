@@ -22,5 +22,18 @@ export interface ProblemStatisticsDTO {
     contest: string
     statement: string
     rating: number,
+    uid: number,
     cnt: number
+}
+
+export interface ProblemWithCreatorDTO {
+    id: number
+    name: string
+    author: string
+    contest: string
+    statement: string
+    rating: number,
+    uid: number,
+    cnt: number
+    creator: string
 }

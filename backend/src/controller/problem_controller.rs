@@ -1,13 +1,14 @@
-use std::cmp::Ordering::Equal;
 use std::collections::HashMap;
 use actix_web::{web, get, delete, put, post, HttpResponse};
-use actix_web::web::{Data, Json, Path};
-use crate::model::problem::{NewProblem, Problem};
+use actix_web::web::{Data, Json, Path, ReqData};
+use crate::model::problem::{NewProblem, UpdProblem};
 use serde::{Deserialize};
+use crate::controller::hate_speech::is_hate_speech;
 use crate::DbPool;
 use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
-use crate::model::dto::problem_dto::{ProblemByOtherSolvedProblemsDTO, ProblemDTO, ProblemStatisticsDTO};
-use crate::repository::{problem_repository, submission_repository, users_repo};
+use crate::model::dto::problem_dto::{ProblemByOtherSolvedProblemsDTO, ProblemDTO, ProblemStatisticsDTO, ProblemWithCreatorDTO};
+use crate::model::dto::token_claims::TokenClaims;
+use crate::repository::{pagination_options_repo, problem_repository, submission_repository, user_credentials_repo, users_repo};
 
 #[derive(Deserialize)]
 pub struct RatingQuery {
@@ -30,23 +31,33 @@ struct Autocomplete {
 }
 
 pub fn problem_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(add_problem)
-        .service(delete_problem)
-        .service(update_problem)
-        .service(all_problems)
+    cfg.service(all_problems)
         .service(get_problems_autocomplete)
         .service(problem_number)
         .service(get_problems_by_submissions)
         .service(get_problem_by_id)
         .service(get_problem_number_of_other_problems_solved_by_its_solvers);
+
+}
+
+pub fn problem_restricted(cfg: &mut web::ServiceConfig) {
+    cfg.service(add_problem)
+        .service(delete_problem)
+        .service(update_problem);
 }
 
 #[post("/api/problem")]
-async fn add_problem(pool: Data<DbPool>, new_problem_json: Json<NewProblem>) -> HttpResponse {
-    let new_problem = new_problem_json.into_inner();
+async fn add_problem(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, new_problem_json: Json<NewProblem>) -> HttpResponse {
+    let mut new_problem = new_problem_json.into_inner();
     if !new_problem.is_valid() {
         return HttpResponse::BadRequest().finish();
     }
+
+    if is_hate_speech(new_problem.statement.clone()).await {
+        return HttpResponse::BadRequest().body("Hate speech detected!");
+    }
+    
+    new_problem.uid = Some(req_user.unwrap().id);
 
     web::block(move || {
         let mut conn = pool.get().unwrap();
@@ -56,28 +67,51 @@ async fn add_problem(pool: Data<DbPool>, new_problem_json: Json<NewProblem>) -> 
 }
 
 #[delete("/api/problem/{id}")]
-async fn delete_problem(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
-    web::block(move || {
+async fn delete_problem(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, path: Path<i32>) -> HttpResponse {
+    let token_data = req_user.unwrap();
+    let id = path.into_inner();
+    match web::block(move || {
         let mut conn = pool.get().unwrap();
-        problem_repository::delete_problem(&mut conn, path.into_inner());
-    }).await.unwrap();
 
-    HttpResponse::Ok().finish()
+        let problem = problem_repository::get_problem_by_id(&mut conn, id).unwrap().unwrap();
+        if token_data.role == "regular" && token_data.id != problem.uid {
+            return Err(());
+        }
+
+        problem_repository::delete_problem(&mut conn, id);
+        Ok(())
+    }).await.unwrap() {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(_) => HttpResponse::Unauthorized().finish()
+    }
 }
 
 #[put("/api/problem")]
-async fn update_problem(pool: Data<DbPool>, new_problem_json: Json<Problem>) -> HttpResponse {
+async fn update_problem(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, new_problem_json: Json<UpdProblem>) -> HttpResponse {
+    let token_data = req_user.unwrap();
     let new_problem = new_problem_json.into_inner();
     if !new_problem.is_valid() {
         return HttpResponse::BadRequest().finish();
     }
 
-    web::block(move || {
-        let mut conn = pool.get().unwrap();
-        problem_repository::update_problem(&mut conn, new_problem);
-    }).await.unwrap();
+    if is_hate_speech(new_problem.statement.clone()).await {
+        return HttpResponse::BadRequest().body("Hate speech detected!");
+    }
 
-    HttpResponse::Ok().finish()
+    match web::block(move || {
+        let mut conn = pool.get().unwrap();
+
+        let problem = problem_repository::get_problem_by_id(&mut conn, new_problem.id).unwrap().unwrap();
+        if token_data.role == "regular" && token_data.id != problem.uid {
+            return Err(());
+        }
+
+        problem_repository::update_problem(&mut conn, new_problem);
+        Ok(())
+    }).await.unwrap() {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(_) => HttpResponse::Unauthorized().finish()
+    }
 }
 
 /*#[get("/api/problem")]
@@ -97,7 +131,8 @@ async fn all_problems(pool: Data<DbPool>, query: web::Query<RatingQuery>) -> Htt
 async fn problem_number(pool: Data<DbPool>) -> HttpResponse {
     let res = web::block(move || {
         let mut conn = pool.get().unwrap();
-        problem_repository::number_of_problems(&mut conn).unwrap()
+        let entities_per_page = pagination_options_repo::get_number_of_pages(&mut conn).unwrap().unwrap().pages;
+        (problem_repository::number_of_problems(&mut conn).unwrap() + entities_per_page - 1) / entities_per_page
     }).await.unwrap();
 
     HttpResponse::Ok().json(res)
@@ -107,15 +142,20 @@ async fn problem_number(pool: Data<DbPool>) -> HttpResponse {
 async fn all_problems(pool: Data<DbPool>, query: web::Query<RatingQuery>) -> HttpResponse {
     let mut problems = web::block(move || {
         let mut conn = pool.get().unwrap();
-        let problems = match query.rating {
-            Some(rating) => problem_repository::get_problems_rating_larger(&mut conn, rating, query.to_pagination()),
-            None => problem_repository::get_problems_paginated(&mut conn, query.to_pagination())
+        let data = query.into_inner();
+        let mut pagination = data.to_pagination();
+        pagination.limit = pagination_options_repo::get_number_of_pages(&mut conn).unwrap().unwrap().pages;
+
+        let problems = match data.rating {
+            Some(rating) => problem_repository::get_problems_rating_larger(&mut conn, rating, pagination),
+            None => problem_repository::get_problems_paginated(&mut conn, pagination)
         }.unwrap();
 
         let mut res = vec![];
         for problem in problems {
             let cnt = submission_repository::get_all_submissions_by_problem_id(&mut conn, problem.id).unwrap().len() as i32;
-            res.push(ProblemStatisticsDTO{problem: problem.clone(), cnt});
+            let creator = user_credentials_repo::get_user_credentials_by_id(&mut conn, problem.uid).unwrap().username;
+            res.push(ProblemWithCreatorDTO{problem: problem.clone(), cnt, creator });
         }
         res
     }).await.map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
@@ -127,7 +167,7 @@ async fn all_problems(pool: Data<DbPool>, query: web::Query<RatingQuery>) -> Htt
 
 #[get("/api/problem/autocomplete")]
 async fn get_problems_autocomplete(pool: Data<DbPool>, query: web::Query<Autocomplete>) -> HttpResponse {
-    let mut problems = web::block(move || {
+    let problems = web::block(move || {
         let mut conn = pool.get().unwrap();
         problem_repository::get_problem_by_name(&mut conn, query.into_inner().name)
     }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();

@@ -1,0 +1,8 @@
+ALTER TABLE UserCredentials
+    DROP COLUMN CONFIRMED;
+
+ALTER TABLE UserCredentials
+    DROP COLUMN CREATED;
+
+ALTER TABLE UserCredentials
+    DROP COLUMN UUID;

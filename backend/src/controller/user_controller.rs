@@ -1,27 +1,30 @@
-use actix_web::{HttpResponse, web, get, delete, put, post};
-use actix_web::web::{Data, Json, Path};
+use actix_web::{HttpResponse, web, get, delete, put};
+use actix_web::web::{Data, Json, Path, ReqData};
 use serde::Deserialize;
 use crate::DbPool;
 use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
-use crate::model::dto::user_dto::{UserDTO, UserReportDTO, UserSubmissionsDTO};
-use crate::model::user::{NewUser, User};
-use crate::repository::{submission_repository, users_repo};
+use crate::model::dto::token_claims::TokenClaims;
+use crate::model::dto::user_dto::{UserPageDTO, UserReportDTO, UserSubmissionsDTO};
+use crate::model::user::User;
+use crate::repository::{contest_repository, pagination_options_repo, participates_repository, problem_repository, submission_repository, user_credentials_repo, users_repo};
 
 pub fn user_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(add_user)
-        .service(delete_user)
-        .service(update_user)
-        .service(all_users)
+    cfg.service(all_users)
         .service(get_users_autocomplete)
         .service(get_user_by_id)
         .service(get_users_by_number_of_participations);
+}
+
+pub fn user_restricted(cfg: &mut web::ServiceConfig) {
+    cfg.service(delete_user)
+        .service(update_user);
 }
 
 #[derive(Deserialize)]
 struct Autocomplete {
     lname: Option<String>
 }
-
+/*
 #[post("/api/user")]
 async fn add_user(pool: Data<DbPool>, new_user: Json<NewUser>) -> HttpResponse {
     web::block(move || {
@@ -29,20 +32,33 @@ async fn add_user(pool: Data<DbPool>, new_user: Json<NewUser>) -> HttpResponse {
         users_repo::add_user(&mut conn, new_user.into_inner());
     }).await.unwrap();
     HttpResponse::Ok().finish()
-}
+}*/
 
 #[delete("/api/user/{id}")]
-async fn delete_user(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
+async fn delete_user(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, path: Path<i32>) -> HttpResponse {
+    let token_data = req_user.unwrap();
+    let id = path.into_inner();
+
+    if token_data.role == "regular" && token_data.id != id {
+        return HttpResponse::Unauthorized().finish();
+    }
+
     web::block(move || {
         let mut conn = pool.get().unwrap();
-        users_repo::delete_user(&mut conn, path.into_inner());
+        users_repo::delete_user(&mut conn, id);
     }).await.unwrap();
 
     HttpResponse::Ok().finish()
 }
 
 #[put("/api/user")]
-async fn update_user(pool: Data<DbPool>, new_problem: Json<User>) -> HttpResponse {
+async fn update_user(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, new_problem: Json<User>) -> HttpResponse {
+    let token_data = req_user.unwrap();
+
+    if token_data.role == "regular" && token_data.id != new_problem.id {
+        return HttpResponse::Unauthorized().finish();
+    }
+
     web::block(move || {
         let mut conn = pool.get().unwrap();
         users_repo::update_user(&mut conn, new_problem.into_inner());
@@ -55,11 +71,14 @@ async fn update_user(pool: Data<DbPool>, new_problem: Json<User>) -> HttpRespons
 async fn all_users(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> HttpResponse {
     let mut users = web::block(move || {
         let mut conn = pool.get().unwrap();
-        let users = users_repo::get_users_paginated(&mut conn, query.into_inner()).unwrap();
+        let mut pagination = query.into_inner();
+        pagination.limit = pagination_options_repo::get_number_of_pages(&mut conn).unwrap().unwrap().pages;
+
+        let users = users_repo::get_users_paginated(&mut conn, pagination).unwrap();
 
         let mut res = vec![];
         for user in users {
-            let cnt = submission_repository::get_all_submissions_by_user_id(&mut conn,user.id).unwrap().len() as i32;
+            let cnt = submission_repository::get_number_of_submissions_by_uid(&mut conn, user.id).unwrap() as i32;
             res.push(UserSubmissionsDTO{user, cnt});
         }
         res
@@ -72,7 +91,7 @@ async fn all_users(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> Http
 
 #[get("/api/user/autocomplete")]
 async fn get_users_autocomplete(pool: Data<DbPool>, path: web::Query<Autocomplete>) -> HttpResponse {
-    let mut users = web::block(move || {
+    let users = web::block(move || {
         let mut conn = pool.get().unwrap();
         users_repo::get_users_by_last_name(&mut conn, path.into_inner().lname)
     }).await.unwrap().map_err(|_| HttpResponse::InternalServerError().finish()).unwrap();
@@ -86,11 +105,22 @@ async fn get_user_by_id(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
 
     let user = web::block(move || {
         let mut conn = pool.get().unwrap();
+
         let user = users_repo::get_user_by_id(&mut conn, id).unwrap().unwrap();
-        let submission_list = submission_repository::get_all_submissions_by_user_id(&mut conn, id).unwrap();
-        UserDTO {
+        let problems = problem_repository::get_number_of_problems_by_uid(&mut conn, id).unwrap() as i32;
+        let contests = contest_repository::get_number_of_contests_by_uid(&mut conn, id).unwrap() as i32;
+        let submissions = submission_repository::get_number_of_submissions_by_uid(&mut conn, id).unwrap() as i32;
+        let participations = participates_repository::get_number_of_participation_by_uid(&mut conn, id).unwrap() as i32;
+        let uc = user_credentials_repo::get_user_credentials_by_id(&mut conn, id).unwrap();
+
+        UserPageDTO {
             user,
-            submissions: submission_list
+            username: uc.username,
+            problems_proposed: problems,
+            contests_created: contests,
+            submissions_sent: submissions,
+            participations,
+            role: uc.role
         }
     }).await.unwrap();
 

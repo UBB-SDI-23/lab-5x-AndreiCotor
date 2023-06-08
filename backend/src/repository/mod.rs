@@ -3,6 +3,9 @@ pub mod submission_repository;
 pub mod contest_repository;
 pub mod participates_repository;
 pub mod problem_repository;
+pub mod user_credentials_repo;
+pub mod pagination_options_repo;
+pub mod chat_repo;
 
 use diesel::PgConnection;
 use diesel::r2d2::ConnectionManager;

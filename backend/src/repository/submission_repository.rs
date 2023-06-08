@@ -11,13 +11,6 @@ pub fn add_submission(db: &mut Mockable<DbConn>, submission: NewSubmission) {
     }
 }
 
-pub fn get_all_submissions(db: &mut Mockable<DbConn>) -> Result<Vec<Submission>, DbError> {
-    match db {
-        Mockable::Real(inner) => real::get_all_submissions(inner),
-        Mockable::Mock => panic!("Mock not implemented!")
-    }
-}
-
 pub fn get_submissions_paginated(db: &mut Mockable<DbConn>, pagination: PaginationDTO) -> Result<Vec<Submission>, DbError> {
     match db {
         Mockable::Real(inner) => real::get_submissions_paginated(inner, pagination),
@@ -39,13 +32,6 @@ pub fn get_all_submissions_by_problem_id(db: &mut Mockable<DbConn>, pid: i32) ->
     }
 }
 
-pub fn get_all_submissions_by_user_id(db: &mut Mockable<DbConn>, uid: i32) -> Result<Vec<Submission>, DbError> {
-    match db {
-        Mockable::Real(inner) => real::get_all_submissions_by_user_id(inner, uid),
-        Mockable::Mock => panic!("Mock not implemented!")
-    }
-}
-
 pub fn delete_submission(db: &mut Mockable<DbConn>, sid: i32) -> QueryResult<usize> {
     match db {
         Mockable::Real(inner) => real::delete_submission(inner, sid),
@@ -56,6 +42,20 @@ pub fn delete_submission(db: &mut Mockable<DbConn>, sid: i32) -> QueryResult<usi
 pub fn update_submission(db: &mut Mockable<DbConn>, sub: Submission) -> QueryResult<usize> {
     match db {
         Mockable::Real(inner) => real::update_submission(inner, sub),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
+pub fn get_number_of_submissions_by_uid(db: &mut Mockable<DbConn>, usid: i32) -> QueryResult<i64> {
+    match db {
+        Mockable::Real(inner) => real::get_number_of_submissions_by_uid(inner, usid),
+        Mockable::Mock => panic!("Mock not implemented!")
+    }
+}
+
+pub fn delete_all_submissions(db: &mut Mockable<DbConn>) -> QueryResult<usize> {
+    match db {
+        Mockable::Real(inner) => real::delete_all_submissions(inner),
         Mockable::Mock => panic!("Mock not implemented!")
     }
 }
@@ -87,11 +87,6 @@ mod real {
         Ok(submission_list)
     }
 
-    pub fn get_all_submissions(db: &mut PgConnection) -> Result<Vec<Submission>, DbError> {
-        let submission_list = submissions.load(db)?;
-        Ok(submission_list)
-    }
-
     pub fn get_submission(db: &mut PgConnection, sid: i32) -> Result<Option<Submission>, DbError> {
         let submission = submissions.filter(id.eq(sid)).first::<Submission>(db).optional().unwrap();
         Ok(submission)
@@ -102,13 +97,18 @@ mod real {
         Ok(submission_list)
     }
 
-    pub fn get_all_submissions_by_user_id(db: &mut PgConnection, uid: i32) -> Result<Vec<Submission>, DbError> {
-        let submission_list = submissions.filter(user_id.eq(uid)).load(db).unwrap();
-        Ok(submission_list)
+    pub fn get_number_of_submissions_by_uid(db: &mut PgConnection, usid: i32) -> QueryResult<i64> {
+        submissions.filter(user_id.eq(usid))
+            .count()
+            .get_result(db)
     }
 
     pub fn delete_submission(db: &mut PgConnection, sid: i32) -> QueryResult<usize> {
         diesel::delete(submissions.filter(id.eq(sid))).execute(db)
+    }
+
+    pub fn delete_all_submissions(db: &mut PgConnection) -> QueryResult<usize> {
+        diesel::delete(submissions).execute(db)
     }
 
     pub fn update_submission(db: &mut PgConnection, sub: Submission) -> QueryResult<usize> {

@@ -1,7 +1,9 @@
 import {useNavigate, useParams} from "react-router-dom";
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import {UserService} from "../services/user-service";
 import {NewUser, User} from "../model/user";
+import {AuthContext} from "../contexts/AuthContext";
+import {AdminService} from "../services/admin-service";
 
 export default function UserDetailsForm() {
     const navigate = useNavigate();
@@ -11,6 +13,9 @@ export default function UserDetailsForm() {
     const [school, setSchool] = useState<string>("");
     const [bio, setBio] = useState<string>("");
     const [teacher, setTeacher] = useState<string>("");
+    const [role, setRole] = useState<string>("");
+    const [error, setError] = useState<string>("");
+    const { authContext } = useContext(AuthContext);
 
     useEffect(() => {
         if (id !== undefined) {
@@ -21,12 +26,20 @@ export default function UserDetailsForm() {
                 setSchool(user.school);
                 setBio(user.bio);
                 setTeacher(user.teacher);
+                setRole(user.role);
             });
         }
     }, [id]);
 
     function submit() {
         if (id != null) {
+            if (authContext && authContext.role === "admin") {
+                AdminService.changeRole(Number(id), role).then(() => {navigate(-1)})
+                    .catch((res) => {
+                        setError("An error has occurred!");
+                    });
+            }
+
             const user: User = {
                 id: Number(id),
                 first_name: firstName,
@@ -37,13 +50,9 @@ export default function UserDetailsForm() {
             };
 
             UserService.updateUser(user).then((res) => {
-                if (res.status !== 200) {
-                    alert(res.statusText);
-                }
-                else {
-                    alert("User was updated successfully!");
-                    navigate(-1);
-                }
+                navigate(-1);
+            }).catch((res) => {
+                setError("An error has occurred!")
             })
         }
         else {
@@ -56,14 +65,10 @@ export default function UserDetailsForm() {
             };
 
             UserService.addUser(user).then((res) => {
-                if (res.status !== 200) {
-                    alert(res.statusText);
-                }
-                else {
-                    alert("User was added successfully!");
-                    navigate(-1);
-                }
-            })
+                navigate(-1);
+            }).catch((res) => {
+                setError("An error has occurred!");
+            });
         }
     }
 
@@ -72,6 +77,22 @@ export default function UserDetailsForm() {
             <h1 className="title">{id != null? "Edit User": "Create User"}</h1>
             <div className="columns">
                 <div className="column is-half-desktop">
+                    <p className="has-text-danger">{error}</p>
+                    {(authContext && authContext.role === "admin")?
+                        (<div className="field">
+                            <label className="label">Role</label>
+                            <div className="select">
+                                <div className="control">
+                                    <select value={role} onChange={(e) => setRole(e.target.value)}>
+                                        <option value={"regular"}>Regular</option>
+                                        <option value={"moderator"}>Moderator</option>
+                                        <option value={"admin"}>Admin</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>) : null
+                    }
+
                     <div className="field">
                         <label className="label">First name</label>
                         <div className="control">

@@ -1,13 +1,15 @@
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {ParticipationPaginationDTO} from "../model/PaginationDTO";
 import {ParticipationWithName} from "../model/participates";
 import {ParticipationService} from "../services/participates-service";
+import {AuthContext} from "../contexts/AuthContext";
 
 export default function ParticipationList() {
     const [participationList, setParticipationList] = useState<ParticipationWithName[]>([]);
     const [value, setValue] = useState<number>(0);
+    const [error, setError] = useState<string>("");
     const [pagination, setPagination] = useState<ParticipationPaginationDTO>({
         first_uid: -1,
         first_cid: -1,
@@ -17,6 +19,7 @@ export default function ParticipationList() {
         direction: 1
     });
     const navigate = useNavigate();
+    const { authContext } = useContext(AuthContext);
 
     useEffect(() => {
         ParticipationService.getParticipations(pagination).then((res) => {
@@ -32,6 +35,8 @@ export default function ParticipationList() {
                     }
                 }));
             }
+        }).catch((res) => {
+            setError("An error has occurred!");
         })
     }, [value, pagination]);
 
@@ -41,7 +46,12 @@ export default function ParticipationList() {
 
     const deleteParticipation = async (id: string) => {
         if (window.confirm("Are you sure you want to delete this entry?")) {
-            await ParticipationService.deleteParticipation(id);
+            try {
+                await ParticipationService.deleteParticipation(id);
+            }
+            catch (err) {
+                setError("An error has occurred!");
+            }
             forceUpdate();
         }
     }
@@ -71,6 +81,29 @@ export default function ParticipationList() {
         }
     }
 
+    const firstPage = () => {
+        setPagination({
+            first_uid: -1,
+            first_cid: -1,
+            last_uid: 0,
+            last_cid: 0,
+            limit: 10,
+            direction: 1
+        });
+    }
+
+    const lastPage = () => {
+        setPagination({
+            first_uid: 1000000000,
+            first_cid: 1000000000,
+            last_uid: 1000000000,
+            last_cid: 1000000000,
+            limit: 10,
+            direction: -1
+        });
+    }
+
+
     const participationsWithURLid = participationList.map((el) => ({
         id: String(el.uid) + "/" + String(el.cid),
         official: String(el.official),
@@ -88,20 +121,28 @@ export default function ParticipationList() {
                     <h1 className="title">Participation List</h1>
                 </div>
                 <div className="column">
-                    <button className="button is-pulled-right is-link" onClick={() => navigate("/participation/create")}>
+                    {authContext? (<button className="button is-pulled-right is-link" onClick={() => navigate("/participation/create")}>
                         Add Participation
-                    </button>
+                    </button>): null}
                 </div>
             </div>
-            <Table columns={["Official", "Score", "User", "Contest"]}
-                   properties={["official", "score", "user", "contest"]}
+            <br/>
+            <p className="has-text-danger">{error}</p>
+            <Table columns={["Official", "Score", "Contest"]}
+                   properties={["official", "score", "contest"]}
                    elements={participationsWithURLid}
                    path={"/participation"}
                    deleteFunction={(id) => deleteParticipation(id)}
+                   creator="user"
+                   uid="uid"
             />
             <nav className="pagination" role="navigation" aria-label="pagination">
                 <button className="pagination-previous" onClick={() => previousPage()}>Previous</button>
                 <button className="pagination-next" onClick={() => nextPage()}>Next page</button>
+                <ul className="pagination-list">
+                    <button className="pagination-link" onClick={() => firstPage()}>First page</button>
+                    <button className="pagination-link" onClick={() => lastPage()}>Last page</button>
+                </ul>
             </nav>
         </div>
     );

@@ -1,25 +1,34 @@
 use actix_web::{HttpResponse, web, post, get, delete, put};
-use actix_web::web::{Data, Json, Path};
+use actix_web::web::{Data, Json, Path, ReqData};
 use crate::DbPool;
 use crate::model::dto::pagination_dto::PaginationDTO;
 use crate::model::dto::submission_dto::{SubmissionDTO, SubmissionReportDTO};
+use crate::model::dto::token_claims::TokenClaims;
 use crate::model::submission::{NewSubmission, Submission};
-use crate::repository::{problem_repository, submission_repository, users_repo};
+use crate::repository::{pagination_options_repo, problem_repository, submission_repository, users_repo};
 
 pub fn submission_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(add_submission)
-        .service(all_submissions)
+    cfg.service(all_submissions)
         .service(get_submission)
-        .service(update_submission)
-        .service(delete_submission)
         .service(get_submission_by_other_submissions_its_user_created);
 }
 
+pub fn submission_restricted(cfg: &mut web::ServiceConfig) {
+    cfg.service(add_submission)
+        .service(delete_submission)
+        .service(update_submission);
+}
+
 #[post("/api/submission")]
-async fn add_submission(pool: Data<DbPool>, new_submission_json: Json<NewSubmission>) -> HttpResponse {
+async fn add_submission(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, new_submission_json: Json<NewSubmission>) -> HttpResponse {
     let new_submission = new_submission_json.into_inner();
+    let token_data = req_user.unwrap();
     if !new_submission.is_valid() {
         return HttpResponse::BadRequest().finish();
+    }
+
+    if token_data.role == "regular" && new_submission.user_id != token_data.id {
+        return HttpResponse::Unauthorized().finish();
     }
 
     web::block(move || {
@@ -33,7 +42,10 @@ async fn add_submission(pool: Data<DbPool>, new_submission_json: Json<NewSubmiss
 async fn all_submissions(pool: Data<DbPool>, query: web::Query<PaginationDTO>) -> HttpResponse {
     let mut submissions = web::block(move || {
         let mut conn = pool.get().unwrap();
-        let submissions = submission_repository::get_submissions_paginated(&mut conn, query.into_inner()).unwrap();
+        let mut pagination = query.into_inner();
+        pagination.limit = pagination_options_repo::get_number_of_pages(&mut conn).unwrap().unwrap().pages;
+
+        let submissions = submission_repository::get_submissions_paginated(&mut conn, pagination).unwrap();
 
         let mut res = vec![];
         for submission in submissions {
@@ -66,10 +78,15 @@ async fn get_submission(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
 }
 
 #[put("/api/submission")]
-async fn update_submission(pool: Data<DbPool>, submission_json: Json<Submission>) -> HttpResponse {
+async fn update_submission(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, submission_json: Json<Submission>) -> HttpResponse {
     let submission = submission_json.into_inner();
+    let token_data = req_user.unwrap();
     if !submission.is_valid() {
         return HttpResponse::BadRequest().finish();
+    }
+
+    if token_data.role == "regular" && submission.user_id != token_data.id {
+        return HttpResponse::Unauthorized().finish();
     }
 
     let val = web::block(move || {
@@ -84,15 +101,27 @@ async fn update_submission(pool: Data<DbPool>, submission_json: Json<Submission>
 }
 
 #[delete("/api/submission/{id}")]
-async fn delete_submission(pool: Data<DbPool>, path: Path<i32>) -> HttpResponse {
+async fn delete_submission(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, path: Path<i32>) -> HttpResponse {
+    let id = path.into_inner();
+    let token_data = req_user.unwrap();
+
     let val = web::block(move || {
         let mut conn = pool.get().unwrap();
-        submission_repository::delete_submission(&mut conn, path.into_inner())
+
+        let submission = submission_repository::get_submission(&mut conn, id).unwrap().unwrap();
+        if token_data.role == "regular" && token_data.id != submission.user_id {
+            return Err(());
+        }
+
+        match submission_repository::delete_submission(&mut conn, id) {
+            Ok(_) => Ok(()),
+            Err(_) => Err(())
+        }
     }).await.unwrap();
 
     match val {
         Ok(_) => HttpResponse::Ok().finish(),
-        Err(_) => HttpResponse::InternalServerError().finish()
+        Err(_) => HttpResponse::Unauthorized().finish()
     }
 }
 

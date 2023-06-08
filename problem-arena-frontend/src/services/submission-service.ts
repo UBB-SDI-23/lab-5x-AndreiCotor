@@ -13,14 +13,14 @@ export const SubmissionService = {
     },
 
     updateSubmission: (submission: Submission): Promise<AxiosResponse> => {
-        return axiosConfigured.put("/submission", submission);
+        return axiosConfigured.put("/submission", submission, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     },
 
     addSubmission: (submission: NewSubmission): Promise<AxiosResponse> => {
-        return axiosConfigured.post("/submission", submission);
+        return axiosConfigured.post("/submission", submission, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     },
 
     deleteSubmission: (id: string): Promise<AxiosResponse> => {
-        return axiosConfigured.delete("/submission/" + id);
+        return axiosConfigured.delete("/submission/" + id, {headers: { Authorization: `Bearer ${localStorage.getItem("token")}`}});
     }
 }

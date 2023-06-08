@@ -1,10 +1,27 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    chat (id) {
+        id -> Int4,
+        nickname -> Varchar,
+        message -> Varchar,
+        uid -> Nullable<Int4>,
+    }
+}
+
+diesel::table! {
     contest (id) {
         id -> Int4,
         name -> Varchar,
         description -> Nullable<Varchar>,
+        uid -> Int4,
+    }
+}
+
+diesel::table! {
+    pagoptions (id) {
+        id -> Int4,
+        pages -> Int4,
     }
 }
 
@@ -25,6 +42,7 @@ diesel::table! {
         contest -> Varchar,
         statement -> Varchar,
         rating -> Int4,
+        uid -> Int4,
     }
 }
 
@@ -40,6 +58,18 @@ diesel::table! {
 }
 
 diesel::table! {
+    usercredentials (id) {
+        id -> Int4,
+        username -> Varchar,
+        password -> Varchar,
+        confirmed -> Bool,
+        created -> Timestamp,
+        uuid -> Varchar,
+        role -> Varchar,
+    }
+}
+
+diesel::table! {
     users (id) {
         id -> Int4,
         first_name -> Varchar,
@@ -50,15 +80,21 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(chat -> users (uid));
+diesel::joinable!(contest -> users (uid));
 diesel::joinable!(participates -> contest (cid));
 diesel::joinable!(participates -> users (uid));
+diesel::joinable!(problems -> users (uid));
 diesel::joinable!(submissions -> problems (problem_id));
 diesel::joinable!(submissions -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    chat,
     contest,
+    pagoptions,
     participates,
     problems,
     submissions,
+    usercredentials,
     users,
 );

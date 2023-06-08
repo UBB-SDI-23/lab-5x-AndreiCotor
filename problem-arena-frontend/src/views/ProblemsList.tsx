@@ -1,28 +1,31 @@
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import {ProblemsService} from "../services/problems-service";
-import {ProblemStatisticsDTO} from "../model/problem";
+import {ProblemWithCreatorDTO} from "../model/problem";
 import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {PaginationDTO} from "../model/PaginationDTO";
+import {AuthContext} from "../contexts/AuthContext";
+import { useMediaQuery } from 'react-responsive';
 
 export default function ProblemsList() {
-    const [problemList, setProblemList] = useState<ProblemStatisticsDTO[]>([]);
+    const [problemList, setProblemList] = useState<ProblemWithCreatorDTO[]>([]);
     const [value, setValue] = useState<number>(0);
     const [filter, setFilter] = useState<number>();
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
     const [page, setPage] = useState<number>(1);
     const [numPages, setNumPages] = useState<number>(10);
     const navigate = useNavigate();
+    const [error, setError] = useState<string>("");
+    const { authContext } = useContext(AuthContext);
+    const isMobile = useMediaQuery({ query: `(max-width: 1780px)` });
 
     useEffect(() => {
         ProblemsService.getProblems(pagination, filter).then((res) => {
-            if (res.data.length > 0) {
-                setProblemList(res.data);
-            }
-        });
+            setProblemList(res.data);
+        }).catch((res) => setError("An error has occurred!"));
         ProblemsService.getNumberOfProblems().then((res) => {
-            setNumPages(Math.ceil(res.data / 10.0));
-        })
+            setNumPages(res.data);
+        }).catch((res) => setError("An error has occurred!"));
     }, [value, pagination, filter]);
 
     function forceUpdate() {
@@ -31,7 +34,12 @@ export default function ProblemsList() {
 
     const deleteProblem = async (id: string) => {
         if (window.confirm("Are you sure you want to delete this entry?")) {
-            await ProblemsService.deleteProblem(id);
+            try {
+                await ProblemsService.deleteProblem(id);
+            }
+            catch (err) {
+                setError("An error has occurred!");
+            }
             forceUpdate();
         }
     }
@@ -138,6 +146,14 @@ export default function ProblemsList() {
         return res;
     }
 
+    const firstPage = async () => {
+        await toPage(1);
+    }
+
+    const lastPage = async () => {
+        await toPage(numPages);
+    }
+
     return (
         <div className="mr-2">
             <div className="columns">
@@ -145,9 +161,9 @@ export default function ProblemsList() {
                     <h1 className="title">Problem List</h1>
                 </div>
                 <div className="column">
-                    <button className="button is-pulled-right is-link" onClick={() => navigate("/problem/create")}>
+                    {authContext? (<button className="button is-pulled-right is-link" onClick={() => navigate("/problem/create")}>
                         Add Problem
-                    </button>
+                    </button>): null}
                 </div>
             </div>
             <div className="field">
@@ -161,22 +177,30 @@ export default function ProblemsList() {
                     />
                 </div>
             </div>
+            <p className="has-text-danger">{error}</p>
             <Table columns={["Name", "Author", "Contest", "Rating", "Submissions"]}
                    properties={["name", "author", "contest", "rating", "cnt"]}
                    elements={problemList}
                    path={"/problem"}
                    deleteFunction={(id) => deleteProblem(id)}
+                   creator="creator"
+                   uid="uid"
             />
             <nav className="pagination" role="navigation" aria-label="pagination">
                 <button className="pagination-previous" onClick={() => previousPage()}>Previous</button>
                 <button className="pagination-next" onClick={() => nextPage()}>Next page</button>
-                <ul className="pagination-list">
+                {(isMobile)? (
+                    <ul className="pagination-list">
+                        <button className="pagination-link" onClick={() => firstPage()}>First page</button>
+                        <button className="pagination-link" onClick={() => lastPage()}>Last page</button>
+                    </ul>
+                ):(<ul className="pagination-list">
                     {paginationComponentLeft()}
                     <li>
                         <button className="pagination-link is-current" aria-current="page">{page}</button>
                     </li>
                     {paginationComponentRight()}
-                </ul>
+                </ul>)}
             </nav>
         </div>
     );

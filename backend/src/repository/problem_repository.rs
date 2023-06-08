@@ -1,5 +1,6 @@
+use diesel::QueryResult;
 use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
-use crate::model::problem::{NewProblem, Problem};
+use crate::model::problem::{NewProblem, Problem, UpdProblem};
 use crate::model::submission::Submission;
 use crate::repository::{DbConn, DbError};
 use crate::utils::mock::Mockable;
@@ -7,13 +8,6 @@ use crate::utils::mock::Mockable;
 pub fn get_problems_paginated(db: &mut Mockable<DbConn>, pagination: PaginationDTO) -> Result<Vec<Problem>, DbError> {
     match db {
         Mockable::Real(inner) => real::get_problems_paginated(inner, pagination),
-        Mockable::Mock => panic!("Mock not implemented!")
-    }
-}
-
-pub fn get_all_problems(db: &mut Mockable<DbConn>) -> Result<Vec<Problem>, DbError> {
-    match db {
-        Mockable::Real(inner) => real::get_all_problems(inner),
         Mockable::Mock => panic!("Mock not implemented!")
     }
 }
@@ -68,7 +62,7 @@ pub fn delete_problem(db: &mut Mockable<DbConn>, pid: i32) {
     }
 }
 
-pub fn update_problem(db: &mut Mockable<DbConn>, problem: Problem) {
+pub fn update_problem(db: &mut Mockable<DbConn>, problem: UpdProblem) {
     match db {
         Mockable::Real(inner) => real::update_problem(inner, problem),
         Mockable::Mock => panic!("Mock not implemented!")
@@ -82,11 +76,25 @@ pub fn get_problems_with_submissions(db: &mut Mockable<DbConn>) -> Result<Vec<(P
     }
 }
 
+pub fn get_number_of_problems_by_uid(db: &mut Mockable<DbConn>, usid: i32) -> QueryResult<i64> {
+    match db {
+        Mockable::Real(inner) => real::get_number_of_problems_by_uid(inner, usid),
+        Mockable::Mock => panic!("Not implemented")
+    }
+}
+
+pub fn delete_all_problems(db: &mut Mockable<DbConn>) -> QueryResult<usize> {
+    match db {
+        Mockable::Real(inner) => real::delete_all_problems(inner),
+        Mockable::Mock => panic!("Not implemented")
+    }
+}
+
 mod real {
     use diesel::prelude::*;
     use diesel::sql_query;
     use crate::model::dto::pagination_dto::{PaginationDTO, StatisticPagination};
-    use crate::model::problem::{NewProblem, Problem};
+    use crate::model::problem::{NewProblem, Problem, UpdProblem};
     use crate::model::submission::Submission;
     use crate::repository::DbError;
     use crate::schema::problems::dsl::*;
@@ -116,11 +124,6 @@ mod real {
         Ok(problem_list)
     }
 
-    pub fn get_all_problems(db: &mut PgConnection) -> Result<Vec<Problem>, DbError> {
-        let problem_list = problems.load(db)?;
-        Ok(problem_list)
-    }
-
     pub fn number_of_problems(db: &mut PgConnection) -> Result<i32, DbError> {
         let cnt: i64 = problems.count().get_result(db).unwrap();
         Ok(cnt as i32)
@@ -135,8 +138,14 @@ mod real {
         Ok(problem_list)
     }
 
-    pub fn get_problem_by_id(db: &mut PgConnection, uid: i32) -> Result<Option<Problem>, DbError> {
-        let problem = problems.filter(id.eq(uid))
+    pub fn get_number_of_problems_by_uid(db: &mut PgConnection, usid: i32) -> QueryResult<i64> {
+        problems.filter(uid.eq(usid))
+            .count()
+            .get_result(db)
+    }
+
+    pub fn get_problem_by_id(db: &mut PgConnection, pid: i32) -> Result<Option<Problem>, DbError> {
+        let problem = problems.filter(id.eq(pid))
             .first::<Problem>(db)
             .optional()?;
 
@@ -167,14 +176,15 @@ mod real {
         diesel::delete(problems.filter(id.eq(pid))).execute(db).unwrap();
     }
 
-    pub fn update_problem(db: &mut PgConnection, problem: Problem) {
+    pub fn delete_all_problems(db: &mut PgConnection) -> QueryResult<usize> {
+        diesel::delete(problems).execute(db)
+    }
+
+    pub fn update_problem(db: &mut PgConnection, problem: UpdProblem) {
         diesel::update(problems.filter(id.eq(problem.id))).set(problem).execute(db).unwrap();
     }
 
     pub fn get_problems_by_submissions(db: &mut PgConnection, pagination: StatisticPagination) -> Result<Vec<(Problem, i32)>, DbError> {
-        use crate::schema::*;
-        use diesel::dsl::count_star;
-
         let auxiliary_list =  if pagination.direction == 1 {
             sql_query(format!("SELECT * FROM PROBLEMSSUBMISSIONS WHERE CNT > {} OR (CNT = {} AND PID > {}) ORDER BY CNT, PID limit {}", pagination.last_stat, pagination.last_stat, pagination.last_id, pagination.limit))
                 .get_results::<Auxiliary>(db)?
@@ -220,6 +230,7 @@ mod mock {
                 contest: "1".to_string(),
                 statement: "1".to_string(),
                 rating: 0,
+                uid: 1,
             }, vec![Submission{
                 id: 1,
                 user_id: 1,
@@ -249,6 +260,7 @@ mod mock {
                 contest: "2".to_string(),
                 statement: "2".to_string(),
                 rating: 2,
+                uid: 2,
             }, vec![Submission {
                 id: 4,
                 user_id: 4,

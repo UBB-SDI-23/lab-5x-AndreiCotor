@@ -1,0 +1,55 @@
+version: '3'
+services:
+  rust_backend:
+    build: .
+    volumes:
+      - './:/usr/src/problemarena'
+    depends_on:
+      - postgres-cluster-ip-service
+      - ai_backend
+    ports:
+      - '8000'
+    networks:
+      - app-network
+  ai_backend:
+    build:
+      context: ./ai
+      dockerfile: Dockerfile
+    volumes:
+      - './ai:/app'
+    ports:
+      - '8080'
+    networks:
+      - app-network
+  postgres-cluster-ip-service:
+    image: 'postgres:15.2-alpine'
+    environment:
+      - POSTGRES_DB=infoarena
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=013551
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/fullchain.pem:/etc/nginx/fullchain.pem
+      - ./nginx/privkey.pem:/etc/nginx/privkey.pem
+      - ./nginx/options-ssl-nginx.conf:/etc/nginx/options-ssl-nginx.conf
+      - ./nginx/ssl-dhparams.pem:/etc/nginx/ssl-dhparams.pem
+    depends_on:
+      - rust_backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

@@ -1,25 +1,34 @@
 use actix_web::{HttpResponse, web, post, delete, put, get};
-use actix_web::web::{Data, Json, Path};
+use actix_web::web::{Data, Json, Path, ReqData};
 use crate::DbPool;
 use crate::model::dto::pagination_dto::ParticipationPaginationDTO;
 use crate::model::dto::participates_dto::ParticipatesDTO;
+use crate::model::dto::token_claims::TokenClaims;
 use crate::model::participates::Participates;
-use crate::repository::{contest_repository, participates_repository, users_repo};
+use crate::repository::{contest_repository, pagination_options_repo, participates_repository, users_repo};
 
 pub fn participates_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(add_participates)
-        .service(delete_participates)
-        .service(update_participates)
-        .service(all_participates)
+    cfg.service(all_participates)
         .service(get_participates_by_id);
 }
 
+pub fn participates_restricted(cfg: &mut web::ServiceConfig) {
+    cfg.service(add_participates)
+        .service(delete_participates)
+        .service(update_participates);
+}
+
 #[post("/api/participates")]
-async fn add_participates(pool: Data<DbPool>, participates_json: Json<Vec<Participates>>) -> HttpResponse {
+async fn add_participates(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, participates_json: Json<Vec<Participates>>) -> HttpResponse {
+    let token_data = req_user.unwrap();
     let participates_list = participates_json.into_inner();
+
     for participates in &participates_list {
         if !participates.is_valid() {
             return HttpResponse::BadRequest().finish();
+        }
+        if token_data.role == "regular" && participates.uid != token_data.id {
+            return HttpResponse::Unauthorized().finish();
         }
     }
 
@@ -35,8 +44,14 @@ async fn add_participates(pool: Data<DbPool>, participates_json: Json<Vec<Partic
 }
 
 #[delete("/api/participates/{id1}/{id2}")]
-async fn delete_participates(pool: Data<DbPool>, path: Path<(i32, i32)>) -> HttpResponse {
+async fn delete_participates(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, path: Path<(i32, i32)>) -> HttpResponse {
     let id = path.into_inner();
+    let token_data = req_user.unwrap();
+
+    if token_data.role == "regular" && id.0 != token_data.id {
+        return HttpResponse::Unauthorized().finish();
+    }
+
     let val = web::block(move || {
         let mut conn = pool.get().unwrap();
         participates_repository::delete_participation(&mut conn, id.0, id.1)
@@ -49,8 +64,14 @@ async fn delete_participates(pool: Data<DbPool>, path: Path<(i32, i32)>) -> Http
 }
 
 #[put("/api/participates")]
-async fn update_participates(pool: Data<DbPool>, new_part: Json<Participates>) -> HttpResponse {
+async fn update_participates(pool: Data<DbPool>, req_user: Option<ReqData<TokenClaims>>, new_part: Json<Participates>) -> HttpResponse {
     let participates = new_part.into_inner();
+    let token_data = req_user.unwrap();
+
+    if token_data.role == "regular" && participates.uid != token_data.id {
+        return HttpResponse::Unauthorized().finish();
+    }
+
     if !participates.is_valid() {
         return HttpResponse::BadRequest().finish();
     }
@@ -70,7 +91,10 @@ async fn update_participates(pool: Data<DbPool>, new_part: Json<Participates>) -
 async fn all_participates(pool: Data<DbPool>, query: web::Query<ParticipationPaginationDTO>) -> HttpResponse {
     let participations = web::block(move || {
         let mut conn = pool.get().unwrap();
-        let participates = participates_repository::get_participation_paginated(&mut conn, query.into_inner()).unwrap();
+        let mut pagination = query.into_inner();
+        pagination.limit = pagination_options_repo::get_number_of_pages(&mut conn).unwrap().unwrap().pages;
+
+        let participates = participates_repository::get_participation_paginated(&mut conn, pagination).unwrap();
 
         let mut res = vec![];
         for part in participates {

@@ -1,7 +1,6 @@
 import {useEffect, useState} from "react";
 import {ProblemsService} from "../services/problems-service";
 import {ProblemStatisticsDTO} from "../model/problem";
-import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {StatisticPagination} from "../model/PaginationDTO";
 
@@ -9,7 +8,6 @@ export default function ProblemListBySuccessRate() {
     const [problemList, setProblemList] = useState<ProblemStatisticsDTO[]>([]);
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<StatisticPagination>({first_id: -1, first_stat: -1, last_id: 0, last_stat: 0, limit: 10, direction: 1});
-    const navigate = useNavigate();
 
     useEffect(() => {
         ProblemsService.getProblemsBySuccessRate(pagination).then((res) => {
@@ -56,6 +54,15 @@ export default function ProblemListBySuccessRate() {
         }
     }
 
+    const firstPage = () => {
+        setPagination({first_id: -1, first_stat: -1, last_id: 0, last_stat: 0, limit: 10, direction: 1});
+    }
+
+    const lastPage = () => {
+        setPagination({first_id: 1000000000, first_stat: 1000000000, last_id: 1000000000, last_stat: 1000000000, limit: 10, direction: -1});
+    }
+
+
     /*function sortByRating() {
         let x = JSON.parse(JSON.stringify(problemList));
         x = x.sort((a: Problem, b: Problem) => a.rating - b.rating);
@@ -68,11 +75,6 @@ export default function ProblemListBySuccessRate() {
                 <div className="column">
                     <h1 className="title">Problem List</h1>
                 </div>
-                <div className="column">
-                    <button className="button is-pulled-right is-link" onClick={() => navigate("/problem/create")}>
-                        Add Problem
-                    </button>
-                </div>
             </div>
             <Table columns={["Name", "Author", "Contest", "Rating", "Submissions"]}
                    properties={["name", "author", "contest", "rating", "cnt"]}
@@ -83,6 +85,10 @@ export default function ProblemListBySuccessRate() {
             <nav className="pagination" role="navigation" aria-label="pagination">
                 <button className="pagination-previous" onClick={() => previousPage()}>Previous</button>
                 <button className="pagination-next" onClick={() => nextPage()}>Next page</button>
+                <ul className="pagination-list">
+                    <button className="pagination-link" onClick={() => firstPage()}>First page</button>
+                    <button className="pagination-link" onClick={() => lastPage()}>Last page</button>
+                </ul>
             </nav>
         </div>
     );

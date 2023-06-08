@@ -1,15 +1,18 @@
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import Table from "../components/Table";
 import {PaginationDTO} from "../model/PaginationDTO";
 import {SubmissionWithNameDTO} from "../model/submission";
 import {SubmissionService} from "../services/submission-service";
+import {AuthContext} from "../contexts/AuthContext";
 
 export default function SubmissionList() {
     const [submissionList, setSubmissionList] = useState<SubmissionWithNameDTO[]>([]);
     const [value, setValue] = useState<number>(0);
     const [pagination, setPagination] = useState<PaginationDTO>({first_id: -1, last_id: 0, limit: 10, direction: 1});
     const navigate = useNavigate();
+    const [error, setError] = useState<string>("");
+    const { authContext } = useContext(AuthContext);
 
     useEffect(() => {
         SubmissionService.getSubmissions(pagination).then((res) => {
@@ -21,11 +24,12 @@ export default function SubmissionList() {
                         score: el.score,
                         language: el.language,
                         user: el.user.last_name,
-                        problem: el.problem.name
+                        problem: el.problem.name,
+                        uid: el.user.id
                     }
                 }));
             }
-        })
+        }).catch((res) => setError("An error has occurred!"))
     }, [value, pagination]);
 
     function forceUpdate() {
@@ -34,7 +38,12 @@ export default function SubmissionList() {
 
     const deleteSubmission = async (id: string) => {
         if (window.confirm("Are you sure you want to delete this entry?")) {
-            await SubmissionService.deleteSubmission(id);
+            try {
+                await SubmissionService.deleteSubmission(id);
+            }
+            catch (err) {
+                setError("An error has occurred!");
+            }
             forceUpdate();
         }
     }
@@ -51,6 +60,15 @@ export default function SubmissionList() {
         }
     }
 
+    const firstPage = () => {
+        setPagination({first_id: -1, last_id: 0, limit: 10, direction: 1});
+    }
+
+    const lastPage = () => {
+        setPagination({first_id: 1000000000, last_id: 1000000000, limit: 10, direction: -1});
+    }
+
+
     return (
         <div className="mr-2">
             <div className="columns">
@@ -58,20 +76,28 @@ export default function SubmissionList() {
                     <h1 className="title">Submission List</h1>
                 </div>
                 <div className="column">
-                    <button className="button is-pulled-right is-link" onClick={() => navigate("/submission/create")}>
+                    {authContext? (<button className="button is-pulled-right is-link" onClick={() => navigate("/submission/create")}>
                         Add Submission
-                    </button>
+                    </button>): null}
                 </div>
             </div>
-            <Table columns={["Score", "Language", "User", "Problem"]}
-                   properties={["score", "language", "user", "problem"]}
+            <br/>
+            <p className="has-text-danger">{error}</p>
+            <Table columns={["Score", "Language", "Problem"]}
+                   properties={["score", "language", "problem"]}
                    elements={submissionList}
                    path={"/submission"}
                    deleteFunction={(id) => deleteSubmission(id)}
+                   creator="user"
+                   uid="uid"
             />
             <nav className="pagination" role="navigation" aria-label="pagination">
                 <button className="pagination-previous" onClick={() => previousPage()}>Previous</button>
                 <button className="pagination-next" onClick={() => nextPage()}>Next page</button>
+                <ul className="pagination-list">
+                    <button className="pagination-link" onClick={() => firstPage()}>First page</button>
+                    <button className="pagination-link" onClick={() => lastPage()}>Last page</button>
+                </ul>
             </nav>
         </div>
     );
